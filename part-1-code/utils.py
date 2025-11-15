@@ -70,14 +70,12 @@ def custom_transform(example):
     
     tokens = word_tokenize(text)
     
-    # First pass: identify eligible words for typos (max n per sentence)
     max_typos_per_sentence = 3
     eligible_typo_indices = []
     for i, token in enumerate(tokens):
         if token.isalpha() and len(token) > 3:
             eligible_typo_indices.append(i)
     
-    # Randomly select up to n words for typos (only if enough eligible words)
     if len(eligible_typo_indices) < max_typos_per_sentence:
         typo_indices = set()  # No typos if not enough eligible words
     else:
@@ -86,7 +84,6 @@ def custom_transform(example):
     transformed_tokens = []
     
     for i, token in enumerate(tokens):
-        # Keep punctuation and numbers as-is
         if not token.isalpha():
             transformed_tokens.append(token)
             continue
@@ -94,11 +91,10 @@ def custom_transform(example):
         token_lower = token.lower()
         transformed = False
         
-        # 1. Synonym replacement (30% probability)
-        if not transformed and random.random() < 0.30 and token_lower not in common_words and len(token) > 3:
+        # 1. Synonym replacement (40% probability)
+        if not transformed and random.random() < 0.40 and token_lower not in common_words and len(token) > 3:
             synsets = wordnet.synsets(token_lower)
             synonyms = []
-            # Only use the first synset (most significant match)
             if synsets:
                 for lemma in synsets[0].lemmas():
                     synonym = lemma.name().replace('_', ' ')
@@ -126,16 +122,11 @@ def custom_transform(example):
                 transformed_tokens.append(new_token)
                 transformed = True
         
-        # 3. Case changes (10% probability) - either complete uppercase or random capitalization
         if not transformed and random.random() < 0.20:
             new_token = token.upper()
-            #else:
-            #    new_token = ''.join(char.upper() if random.random() < 0.5 else char.lower() 
-            #                               for char in token)
             transformed_tokens.append(new_token)
             transformed = True
         
-        # Keep original if no transformation applied
         if not transformed:
             transformed_tokens.append(token)
     
