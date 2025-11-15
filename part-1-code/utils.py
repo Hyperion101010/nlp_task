@@ -92,7 +92,7 @@ def custom_transform(example):
         transformed = False
         
         # 1. Synonym replacement (40% probability)
-        if not transformed and random.random() < 0.45 and token_lower not in common_words and len(token) > 3:
+        if not transformed and random.random() < 0.40 and token_lower not in common_words and len(token) > 3:
             synsets = wordnet.synsets(token_lower)
             synonyms = []
             # Use first 2 synsets (most significant matches) for better variety while avoiding obscure words
@@ -123,7 +123,7 @@ def custom_transform(example):
                 transformed_tokens.append(new_token)
                 transformed = True
         
-        if not transformed and random.random() < 0.20:
+        if not transformed and random.random() < 0.30:
             new_token = token.upper()
             transformed_tokens.append(new_token)
             transformed = True
