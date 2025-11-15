@@ -97,7 +97,7 @@ def custom_transform(example):
             synonyms = []
             # Use first 2 synsets (most significant matches) for better variety while avoiding obscure words
             if synsets:
-                for syn in synsets[:3]:
+                for syn in synsets[:5]:
                     for lemma in syn.lemmas():
                         synonym = lemma.name().replace('_', ' ')
                         if (' ' not in synonym and synonym.isalpha() and 
@@ -112,6 +112,7 @@ def custom_transform(example):
                 transformed = True
         
         # 2. Typos on edge characters (max n per sentence)
+        """
         if not transformed and i in typo_indices:
             pos = random.choice([0, len(token) - 1])
             char = token_lower[pos]
@@ -122,7 +123,8 @@ def custom_transform(example):
                 new_token = token[:pos] + replacement + token[pos+1:]
                 transformed_tokens.append(new_token)
                 transformed = True
-        
+        """
+
         if not transformed and random.random() < 0.30:
             new_token = token.upper()
             transformed_tokens.append(new_token)
