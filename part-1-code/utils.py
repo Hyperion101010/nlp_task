@@ -62,8 +62,11 @@ def custom_transform(example):
         'w': ['q', 'e', 's', 'a'], 'x': ['z', 's', 'd', 'c'], 'y': ['t', 'u', 'h', 'g'], 'z': ['a', 's', 'x']
     }
     
-    # Common words to avoid replacing with obscure synonyms
-    common_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they'}
+    # Common words to skip for synonym replacement
+    common_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 
+                    'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 
+                    'will', 'would', 'could', 'should', 'may', 'might', 'this', 'that', 'these', 'those', 
+                    'i', 'you', 'he', 'she', 'it', 'we', 'they'}
     
     tokens = word_tokenize(text)
     transformed_tokens = []
@@ -77,14 +80,13 @@ def custom_transform(example):
         token_lower = token.lower()
         transformed = False
         
-        # 1. Synonym replacement (8% probability, skip common words)
-        if not transformed and random.random() < 0.10 and token_lower not in common_words and len(token) > 3:
+        # 1. Synonym replacement (20% probability)
+        if not transformed and random.random() < 0.15 and token_lower not in common_words and len(token) > 3:
             synsets = wordnet.synsets(token_lower)
             synonyms = []
-            for syn in synsets[:3]:  # Only check first 3 synsets to avoid obscure words
+            for syn in synsets[:3]:
                 for lemma in syn.lemmas():
                     synonym = lemma.name().replace('_', ' ')
-                    # Filter: single word, different from original, common length, no special chars
                     if (' ' not in synonym and synonym.lower() != token_lower and 
                         synonym.isalpha() and 3 <= len(synonym) <= 12):
                         synonyms.append(synonym)
@@ -96,10 +98,9 @@ def custom_transform(example):
                 transformed_tokens.append(new_token)
                 transformed = True
         
-        # 2. Minor typos on edge characters (5% probability)
-        if not transformed and random.random() < 0.05 and len(token) > 3:
-            edge_positions = [0, len(token) - 1]
-            pos = random.choice(edge_positions)
+        # 2. Typos on edge characters (20% probability)
+        if not transformed and random.random() < 0.20 and len(token) > 3:
+            pos = random.choice([0, len(token) - 1])
             char = token_lower[pos]
             if char in qwerty_map and qwerty_map[char]:
                 replacement = random.choice(qwerty_map[char])
@@ -109,13 +110,11 @@ def custom_transform(example):
                 transformed_tokens.append(new_token)
                 transformed = True
         
-        # 3. Subtle case changes (10% probability) - only lowercase or capitalize first letter
-        if not transformed and random.random() < 0.10:
-            if token.isupper() or (token[0].isupper() and token[1:].islower()):
-                # Convert to lowercase
+        # 3. Case changes (20% probability)
+        if not transformed and random.random() < 0.20:
+            if token[0].isupper():
                 new_token = token.lower()
             else:
-                # Capitalize first letter
                 new_token = token.capitalize()
             transformed_tokens.append(new_token)
             transformed = True
