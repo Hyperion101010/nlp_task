@@ -10,9 +10,12 @@ from tqdm.auto import tqdm
 import evaluate
 import random
 import argparse
+import nltk
 from nltk.corpus import wordnet
 from nltk import word_tokenize
 from nltk.tokenize.treebank import TreebankWordDetokenizer
+
+nltk.download('punkt')
 
 random.seed(0)
 
