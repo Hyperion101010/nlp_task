@@ -43,8 +43,94 @@ def custom_transform(example):
     # how you could implement two of them --- synonym replacement and typos.
 
     # You should update example["text"] using your transformation
-
-    raise NotImplementedError
+    
+    text = example["text"]
+    
+    qwerty_map = {
+        'a': ['q', 'w', 's', 'z'],
+        'b': ['v', 'g', 'h', 'n'],
+        'c': ['x', 'd', 'f', 'v'],
+        'd': ['s', 'e', 'r', 'f', 'c', 'x'],
+        'e': ['w', 'r', 'd', 's'],
+        'f': ['d', 'r', 't', 'g', 'v', 'c'],
+        'g': ['f', 't', 'y', 'h', 'b', 'v'],
+        'h': ['g', 'y', 'u', 'j', 'n', 'b'],
+        'i': ['u', 'o', 'k', 'j'],
+        'j': ['h', 'u', 'i', 'k', 'm', 'n'],
+        'k': ['j', 'i', 'o', 'l', 'm'],
+        'l': ['k', 'o', 'p'],
+        'm': ['n', 'j', 'k'],
+        'n': ['b', 'h', 'j', 'm'],
+        'o': ['i', 'p', 'l', 'k'],
+        'p': ['o', 'l'],
+        'q': ['w', 'a'],
+        'r': ['e', 't', 'f', 'd'],
+        's': ['a', 'w', 'e', 'd', 'x', 'z'],
+        't': ['r', 'y', 'g', 'f'],
+        'u': ['y', 'i', 'j', 'h'],
+        'v': ['c', 'f', 'g', 'b'],
+        'w': ['q', 'e', 's', 'a'],
+        'x': ['z', 's', 'd', 'c'],
+        'y': ['t', 'u', 'h', 'g'],
+        'z': ['a', 's', 'x']
+    }
+    
+    tokens = word_tokenize(text)
+    transformed_tokens = []
+    
+    for token in tokens:
+        if not token.isalpha():
+            transformed_tokens.append(token)
+            continue
+        
+        if random.random() < 0.20:
+            synsets = wordnet.synsets(token.lower())
+            if synsets:
+                synonyms = []
+                for syn in synsets:
+                    for lemma in syn.lemmas():
+                        synonym = lemma.name().replace('_', ' ')
+                        if ' ' not in synonym and synonym.lower() != token.lower() and synonym.isalpha():
+                            synonyms.append(synonym)
+                
+                if synonyms:
+                    new_token = random.choice(synonyms)
+                    if token[0].isupper():
+                        new_token = new_token.capitalize()
+                    transformed_tokens.append(new_token)
+                    continue
+        
+        if random.random() < 0.20 and len(token) > 2:
+            token_lower = token.lower()
+            edge_positions = [0, len(token) - 1]
+            pos = random.choice(edge_positions)
+            char = token_lower[pos]
+            if char in qwerty_map and qwerty_map[char]:
+                # Replace with a neighboring key
+                replacement = random.choice(qwerty_map[char])
+                # Preserve original case
+                if token[pos].isupper():
+                    replacement = replacement.upper()
+                new_token = token[:pos] + replacement + token[pos+1:]
+                transformed_tokens.append(new_token)
+                continue
+        
+        # Randomly capitalize or lowercase words with 20% probability
+        if random.random() < 0.20:
+            if random.random() < 0.5:
+                # Convert to lowercase
+                new_token = token.lower()
+            else:
+                # Convert to uppercase
+                new_token = token.upper()
+            transformed_tokens.append(new_token)
+            continue
+        
+        transformed_tokens.append(token)
+    
+    # Reconstruct the text
+    detokenizer = TreebankWordDetokenizer()
+    example["text"] = detokenizer.detokenize(transformed_tokens)
 
     ##### YOUR CODE ENDS HERE ######
 
