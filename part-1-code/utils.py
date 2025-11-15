@@ -70,7 +70,7 @@ def custom_transform(example):
     
     tokens = word_tokenize(text)
     
-    max_typos_per_sentence = 3
+    max_typos_per_sentence = 2
     eligible_typo_indices = []
     for i, token in enumerate(tokens):
         if token.isalpha() and len(token) > 3:
