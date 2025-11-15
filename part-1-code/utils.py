@@ -50,6 +50,7 @@ def custom_transform(example):
     
     text = example["text"]
     
+    """
     # QWERTY keyboard neighbors for typo simulation
     qwerty_map = {
         'a': ['q', 'w', 's', 'z'], 'b': ['v', 'g', 'h', 'n'], 'c': ['x', 'd', 'f', 'v'],
@@ -61,6 +62,7 @@ def custom_transform(example):
         't': ['r', 'y', 'g', 'f'], 'u': ['y', 'i', 'j', 'h'], 'v': ['c', 'f', 'g', 'b'],
         'w': ['q', 'e', 's', 'a'], 'x': ['z', 's', 'd', 'c'], 'y': ['t', 'u', 'h', 'g'], 'z': ['a', 's', 'x']
     }
+    """
     
     # Common words to skip for synonym replacement
     common_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 
@@ -70,17 +72,19 @@ def custom_transform(example):
     
     tokens = word_tokenize(text)
     
+    """
     max_typos_per_sentence = 2
     eligible_typo_indices = []
     for i, token in enumerate(tokens):
         if token.isalpha() and len(token) > 3:
             eligible_typo_indices.append(i)
-    
+
     if len(eligible_typo_indices) < max_typos_per_sentence:
         typo_indices = set()  # No typos if not enough eligible words
     else:
         typo_indices = set(random.sample(eligible_typo_indices, max_typos_per_sentence)) if eligible_typo_indices else set()
-    
+    """
+
     transformed_tokens = []
     
     for i, token in enumerate(tokens):
