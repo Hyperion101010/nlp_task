@@ -98,11 +98,13 @@ def custom_transform(example):
         if not transformed and random.random() < 0.30 and token_lower not in common_words and len(token) > 3:
             synsets = wordnet.synsets(token_lower)
             synonyms = []
-            for syn in synsets[:3]:
-                for lemma in syn.lemmas():
+            # Only use the first synset (most significant match)
+            if synsets:
+                for lemma in synsets[0].lemmas():
                     synonym = lemma.name().replace('_', ' ')
-                    if (' ' not in synonym and synonym.lower() != token_lower and 
-                        synonym.isalpha() and 3 <= len(synonym) <= 12):
+                    # Filter: single word, different from original (not the same word), alphabetic only
+                    if (' ' not in synonym and synonym.isalpha() and 
+                        synonym.lower() != token_lower and synonym.lower() != token.lower()):
                         synonyms.append(synonym)
             
             if synonyms:
