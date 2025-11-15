@@ -50,7 +50,7 @@ def do_train(args, model, train_dataloader, save_dir="./out"):
             each_bt = {k: v.to(device) for k, v in each_batch.items()}
             
             optimizer.zero_grad()
-            op = model(**each_batch)
+            op = model(**each_bt)
             loss = op.loss
             loss.backward()
             optimizer.step()
