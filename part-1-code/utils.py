@@ -97,7 +97,7 @@ def custom_transform(example):
             synonyms = []
             # Use first 2 synsets (most significant matches) for better variety while avoiding obscure words
             if synsets:
-                for syn in synsets[:4]:
+                for syn in synsets[:3]:
                     for lemma in syn.lemmas():
                         synonym = lemma.name().replace('_', ' ')
                         if (' ' not in synonym and synonym.isalpha() and 
