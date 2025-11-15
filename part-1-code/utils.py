@@ -104,7 +104,7 @@ def custom_transform(example):
                     transformed_tokens.append(new_token)
                     continue
         
-        if random.random() < 0.20 and len(token) > 2:
+        if random.random() < 0.10 and len(token) > 2:
             token_lower = token.lower()
             edge_positions = [0, len(token) - 1]
             pos = random.choice(edge_positions)
