@@ -69,9 +69,23 @@ def custom_transform(example):
                     'i', 'you', 'he', 'she', 'it', 'we', 'they'}
     
     tokens = word_tokenize(text)
+    
+    # First pass: identify eligible words for typos (max n per sentence)
+    max_typos_per_sentence = 3
+    eligible_typo_indices = []
+    for i, token in enumerate(tokens):
+        if token.isalpha() and len(token) > 3:
+            eligible_typo_indices.append(i)
+    
+    # Randomly select up to n words for typos (only if enough eligible words)
+    if len(eligible_typo_indices) < max_typos_per_sentence:
+        typo_indices = set()  # No typos if not enough eligible words
+    else:
+        typo_indices = set(random.sample(eligible_typo_indices, max_typos_per_sentence)) if eligible_typo_indices else set()
+    
     transformed_tokens = []
     
-    for token in tokens:
+    for i, token in enumerate(tokens):
         # Keep punctuation and numbers as-is
         if not token.isalpha():
             transformed_tokens.append(token)
@@ -80,7 +94,7 @@ def custom_transform(example):
         token_lower = token.lower()
         transformed = False
         
-        # 1. Synonym replacement (20% probability)
+        # 1. Synonym replacement (15% probability)
         if not transformed and random.random() < 0.15 and token_lower not in common_words and len(token) > 3:
             synsets = wordnet.synsets(token_lower)
             synonyms = []
@@ -98,8 +112,8 @@ def custom_transform(example):
                 transformed_tokens.append(new_token)
                 transformed = True
         
-        # 2. Typos on edge characters (20% probability)
-        if not transformed and random.random() < 0.20 and len(token) > 3:
+        # 2. Typos on edge characters (max n per sentence)
+        if not transformed and i in typo_indices:
             pos = random.choice([0, len(token) - 1])
             char = token_lower[pos]
             if char in qwerty_map and qwerty_map[char]:
