@@ -87,7 +87,7 @@ def custom_transform(example):
             transformed_tokens.append(token)
             continue
         
-        if random.random() < 0.20:
+        if random.random() < 0.10:
             synsets = wordnet.synsets(token.lower())
             if synsets:
                 synonyms = []
