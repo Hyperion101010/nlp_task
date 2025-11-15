@@ -92,12 +92,12 @@ def custom_transform(example):
         transformed = False
         
         # 1. Synonym replacement (40% probability)
-        if not transformed and random.random() < 0.50 and token_lower not in common_words and len(token) > 3:
+        if not transformed and random.random() < 0.40 and token_lower not in common_words and len(token) > 3:
             synsets = wordnet.synsets(token_lower)
             synonyms = []
             # Use first 2 synsets (most significant matches) for better variety while avoiding obscure words
             if synsets:
-                for syn in synsets[:2]:
+                for syn in synsets[:4]:
                     for lemma in syn.lemmas():
                         synonym = lemma.name().replace('_', ' ')
                         if (' ' not in synonym and synonym.isalpha() and 
