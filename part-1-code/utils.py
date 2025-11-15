@@ -94,8 +94,8 @@ def custom_transform(example):
         token_lower = token.lower()
         transformed = False
         
-        # 1. Synonym replacement (15% probability)
-        if not transformed and random.random() < 0.20 and token_lower not in common_words and len(token) > 3:
+        # 1. Synonym replacement (30% probability)
+        if not transformed and random.random() < 0.30 and token_lower not in common_words and len(token) > 3:
             synsets = wordnet.synsets(token_lower)
             synonyms = []
             for syn in synsets[:3]:
@@ -125,12 +125,11 @@ def custom_transform(example):
                 transformed = True
         
         # 3. Case changes (10% probability) - either complete uppercase or random capitalization
-        if not transformed and random.random() < 0.10:
-            if random.random() < 0.5:
-                new_token = token.upper()
-            else:
-                new_token = ''.join(char.upper() if random.random() < 0.5 else char.lower() 
-                                   for char in token)
+        if not transformed and random.random() < 0.20:
+            new_token = token.upper()
+            #else:
+            #    new_token = ''.join(char.upper() if random.random() < 0.5 else char.lower() 
+            #                               for char in token)
             transformed_tokens.append(new_token)
             transformed = True
         
