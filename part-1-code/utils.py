@@ -50,7 +50,6 @@ def custom_transform(example):
     
     text = example["text"]
     
-    """
     # QWERTY keyboard neighbors for typo simulation
     qwerty_map = {
         'a': ['q', 'w', 's', 'z'], 'b': ['v', 'g', 'h', 'n'], 'c': ['x', 'd', 'f', 'v'],
@@ -62,82 +61,62 @@ def custom_transform(example):
         't': ['r', 'y', 'g', 'f'], 'u': ['y', 'i', 'j', 'h'], 'v': ['c', 'f', 'g', 'b'],
         'w': ['q', 'e', 's', 'a'], 'x': ['z', 's', 'd', 'c'], 'y': ['t', 'u', 'h', 'g'], 'z': ['a', 's', 'x']
     }
-    """
     
     # Articles and pronouns to skip for synonym replacement (max 15 words)
     common_words = {'the', 'a', 'an', 'he', 'she', 'i', 'you', 'it', 'we', 'they', 'him', 'her', 'his', 'hers', 'this'}
     
     tokens = word_tokenize(text)
-    
-    """
-    max_typos_per_sentence = 2
-    eligible_typo_indices = []
-    for i, token in enumerate(tokens):
-        if token.isalpha() and len(token) > 3:
-            eligible_typo_indices.append(i)
 
-    if len(eligible_typo_indices) < max_typos_per_sentence:
-        typo_indices = set()  # No typos if not enough eligible words
-    else:
-        typo_indices = set(random.sample(eligible_typo_indices, max_typos_per_sentence)) if eligible_typo_indices else set()
-    """
-
-    transformed_tokens = []
+    transformed_tkns = []
     
     for i, token in enumerate(tokens):
         if not token.isalpha():
-            transformed_tokens.append(token)
+            transformed_tkns.append(token)
             continue
         
-        token_lower = token.lower()
-        transformed = False
+        token_lw = token.lower()
+        transformed_flg = False
         
         # 1. Synonym replacement (40% probability)
-        if not transformed and random.random() < 0.40 and token_lower not in common_words:
-            synsets = wordnet.synsets(token_lower)
+        if not transformed_flg and random.random() < 0.40 and token_lw not in common_words:
+            synsets = wordnet.synsets(token_lw)
             synonyms = []
-            # Use first 2 synsets (most significant matches) for better variety while avoiding obscure words
+
             if synsets:
                 for syn in synsets:
                     for lemma in syn.lemmas():
                         synonym = lemma.name().replace('_', ' ')
                         if (' ' not in synonym and synonym.isalpha() and 
-                            synonym.lower() != token_lower and synonym.lower() != token.lower()):
+                            synonym.lower() != token_lw and synonym.lower() != token.lower()):
                             synonyms.append(synonym)
             
             if synonyms:
                 new_token = random.choice(synonyms)
                 if token[0].isupper():
                     new_token = new_token.capitalize()
-                transformed_tokens.append(new_token)
-                transformed = True
+                transformed_tkns.append(new_token)
+                transformed_flg = True
         
-        # 2. Typos on edge characters (max n per sentence)
-        """
-        if not transformed and i in typo_indices:
-            pos = random.choice([0, len(token) - 1])
+        # 2. Typos on random letters (20% probability)
+        if not transformed_flg and random.random() < 0.20 and len(token) > 2:
+            token_lower = token.lower()
+            # Replace a random letter with a neighboring QWERTY key
+            pos = random.randint(0, len(token) - 1)
             char = token_lower[pos]
             if char in qwerty_map and qwerty_map[char]:
                 replacement = random.choice(qwerty_map[char])
+                # Preserve original case
                 if token[pos].isupper():
                     replacement = replacement.upper()
                 new_token = token[:pos] + replacement + token[pos+1:]
-                transformed_tokens.append(new_token)
-                transformed = True
-        """
-
-        if not transformed and random.random() < 0.10:
-            new_token = token.upper()
-            transformed_tokens.append(new_token)
-            transformed = True
+                transformed_tkns.append(new_token)
+                transformed_flg = True
         
-        if not transformed:
-            transformed_tokens.append(token)
+        if not transformed_flg:
+            transformed_tkns.append(token)
 
-
-    # Reconstruct the text with proper spacing
     detokenizer = TreebankWordDetokenizer()
-    example["text"] = detokenizer.detokenize(transformed_tokens)
+    example["text"] = detokenizer.detokenize(transformed_tkns)
 
     ##### YOUR CODE ENDS HERE ######
 
