@@ -29,6 +29,21 @@ class T5Dataset(Dataset):
         self.split = split
         self.tokenizer = T5TokenizerFast.from_pretrained("google-t5/t5-small")
         
+        # Cache BOS token ID (extra_id_0) for decoder
+        # T5 tokenizers from HuggingFace include extra_id_0 through extra_id_99 by default
+        # Try extra_id_0 first, then fallback to other extra_id tokens if needed
+        self.bos_token_id = self.tokenizer.convert_tokens_to_ids("<extra_id_0>")
+        if self.bos_token_id == self.tokenizer.unk_token_id:
+            # Fallback: try other extra_id tokens
+            for i in range(1, 100):
+                token_id = self.tokenizer.convert_tokens_to_ids(f"<extra_id_{i}>")
+                if token_id != self.tokenizer.unk_token_id:
+                    self.bos_token_id = token_id
+                    break
+            else:
+                # Last resort: use pad_token_id (not ideal, but prevents crash)
+                self.bos_token_id = self.tokenizer.pad_token_id
+        
         # Load NL queries
         nl_path = os.path.join(data_folder, f"{split}.nl")
         self.nl_texts = load_lines(nl_path)
@@ -68,12 +83,7 @@ class T5Dataset(Dataset):
         if self.split == "test":
             # For test set, we don't have SQL targets
             # Return encoder data and initial decoder token for generation
-            # T5 uses extra_id_0 as BOS token for decoder (token ID 32000)
-            bos_token_id = self.tokenizer.convert_tokens_to_ids("<extra_id_0>")
-            if bos_token_id == self.tokenizer.unk_token_id:
-                # Fallback: use pad_token_id if extra_id_0 not found
-                bos_token_id = self.tokenizer.pad_token_id
-            initial_decoder_token = torch.tensor([bos_token_id])
+            initial_decoder_token = torch.tensor([self.bos_token_id])
             return encoder_ids, initial_decoder_token
         else:
             # For train/dev, we have SQL targets
@@ -91,19 +101,13 @@ class T5Dataset(Dataset):
             
             # Decoder input: shift targets right by one position for teacher forcing
             # Add BOS token (extra_id_0) at the beginning
-            # T5 uses extra_id_0 (token ID 32000) as BOS token for decoder
-            bos_token_id = self.tokenizer.convert_tokens_to_ids("<extra_id_0>")
-            if bos_token_id == self.tokenizer.unk_token_id:
-                # Fallback: use pad_token_id if extra_id_0 not found
-                bos_token_id = self.tokenizer.pad_token_id
-            
             decoder_input_ids = torch.cat([
-                torch.tensor([bos_token_id]),
+                torch.tensor([self.bos_token_id]),
                 decoder_target_ids[:-1]  # Remove last token (EOS) and shift
             ])
             
             # Initial decoder token for generation (just BOS)
-            initial_decoder_token = torch.tensor([bos_token_id])
+            initial_decoder_token = torch.tensor([self.bos_token_id])
             
             return encoder_ids, decoder_input_ids, decoder_target_ids, initial_decoder_token
 
@@ -194,5 +198,25 @@ def load_lines(path):
     return lines
 
 def load_prompting_data(data_folder):
-    # TODO
+    """
+    Load raw NL and SQL strings for prompting-based experiments.
+
+    Returns:
+        train_x: list of train NL queries (strings)
+        train_y: list of train SQL queries (strings)
+        dev_x:   list of dev NL queries (strings)
+        dev_y:   list of dev SQL queries (strings)
+        test_x:  list of test NL queries (strings, no SQL labels)
+    """
+    # Train split
+    train_x = load_lines(os.path.join(data_folder, "train.nl"))
+    train_y = load_lines(os.path.join(data_folder, "train.sql"))
+
+    # Dev split
+    dev_x = load_lines(os.path.join(data_folder, "dev.nl"))
+    dev_y = load_lines(os.path.join(data_folder, "dev.sql"))
+
+    # Test split (no SQL ground truth)
+    test_x = load_lines(os.path.join(data_folder, "test.nl"))
+
     return train_x, train_y, dev_x, dev_y, test_x
