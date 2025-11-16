@@ -64,11 +64,8 @@ def custom_transform(example):
     }
     """
     
-    # Common words to skip for synonym replacement
-    common_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 
-                    'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 
-                    'will', 'would', 'could', 'should', 'may', 'might', 'this', 'that', 'these', 'those', 
-                    'i', 'you', 'he', 'she', 'it', 'we', 'they'}
+    # Articles and pronouns to skip for synonym replacement (max 15 words)
+    common_words = {'the', 'a', 'an', 'he', 'she', 'i', 'you', 'it', 'we', 'they', 'him', 'her', 'his', 'hers', 'this'}
     
     tokens = word_tokenize(text)
     
@@ -96,7 +93,7 @@ def custom_transform(example):
         transformed = False
         
         # 1. Synonym replacement (40% probability)
-        if not transformed and random.random() < 0.40 and token_lower not in common_words and len(token) > 3:
+        if not transformed and random.random() < 0.40 and token_lower not in common_words:
             synsets = wordnet.synsets(token_lower)
             synonyms = []
             # Use first 2 synsets (most significant matches) for better variety while avoiding obscure words
