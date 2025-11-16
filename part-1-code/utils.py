@@ -129,7 +129,7 @@ def custom_transform(example):
                 transformed = True
         """
 
-        if not transformed and random.random() < 0.30:
+        if not transformed and random.random() < 0.20:
             new_token = token.upper()
             transformed_tokens.append(new_token)
             transformed = True
