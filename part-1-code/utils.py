@@ -37,7 +37,6 @@ def example_transform(example):
 # something called synsets (which stands for synonymous words) and for each of them, lemmas() should give you a possible synonym word.
 # You can randomly select each word with some fixed probability to replace by a synonym.
 
-
 def custom_transform(example):
     ################################
     ##### YOUR CODE BEGINGS HERE ###
@@ -47,36 +46,24 @@ def custom_transform(example):
     # how you could implement two of them --- synonym replacement and typos.
 
     # You should update example["text"] using your transformation
-    
+
     text = example["text"]
-    
-    # QWERTY keyboard neighbors for typo simulation
-    qwerty_map = {
-        'a': ['q', 'w', 's', 'z'], 'b': ['v', 'g', 'h', 'n'], 'c': ['x', 'd', 'f', 'v'],
-        'd': ['s', 'e', 'r', 'f', 'c', 'x'], 'e': ['w', 'r', 'd', 's'], 'f': ['d', 'r', 't', 'g', 'v', 'c'],
-        'g': ['f', 't', 'y', 'h', 'b', 'v'], 'h': ['g', 'y', 'u', 'j', 'n', 'b'], 'i': ['u', 'o', 'k', 'j'],
-        'j': ['h', 'u', 'i', 'k', 'm', 'n'], 'k': ['j', 'i', 'o', 'l', 'm'], 'l': ['k', 'o', 'p'],
-        'm': ['n', 'j', 'k'], 'n': ['b', 'h', 'j', 'm'], 'o': ['i', 'p', 'l', 'k'], 'p': ['o', 'l'],
-        'q': ['w', 'a'], 'r': ['e', 't', 'f', 'd'], 's': ['a', 'w', 'e', 'd', 'x', 'z'],
-        't': ['r', 'y', 'g', 'f'], 'u': ['y', 'i', 'j', 'h'], 'v': ['c', 'f', 'g', 'b'],
-        'w': ['q', 'e', 's', 'a'], 'x': ['z', 's', 'd', 'c'], 'y': ['t', 'u', 'h', 'g'], 'z': ['a', 's', 'x']
-    }
-    
-    # Articles and pronouns to skip for synonym replacement (max 15 words)
+
+    # Common words to skip for synonym replacement
     common_words = {'the', 'a', 'an', 'he', 'she', 'i', 'you', 'it', 'we', 'they', 'him', 'her', 'his', 'hers', 'this'}
-    
+
     tokens = word_tokenize(text)
 
     transformed_tkns = []
-    
+
     for i, token in enumerate(tokens):
         if not token.isalpha():
             transformed_tkns.append(token)
             continue
-        
+
         token_lw = token.lower()
         transformed_flg = False
-        
+
         # 1. Synonym replacement (40% probability)
         if not transformed_flg and random.random() < 0.40 and token_lw not in common_words:
             synsets = wordnet.synsets(token_lw)
@@ -89,32 +76,18 @@ def custom_transform(example):
                         if (' ' not in synonym and synonym.isalpha() and 
                             synonym.lower() != token_lw and synonym.lower() != token.lower()):
                             synonyms.append(synonym)
-            
+
             if synonyms:
                 new_token = random.choice(synonyms)
                 if token[0].isupper():
                     new_token = new_token.capitalize()
                 transformed_tkns.append(new_token)
                 transformed_flg = True
-        
-        # 2. Typos on random letters (20% probability)
-        if not transformed_flg and random.random() < 0.20 and len(token) > 2:
-            token_lower = token.lower()
-            # Replace a random letter with a neighboring QWERTY key
-            pos = random.randint(0, len(token) - 1)
-            char = token_lower[pos]
-            if char in qwerty_map and qwerty_map[char]:
-                replacement = random.choice(qwerty_map[char])
-                # Preserve original case
-                if token[pos].isupper():
-                    replacement = replacement.upper()
-                new_token = token[:pos] + replacement + token[pos+1:]
-                transformed_tkns.append(new_token)
-                transformed_flg = True
-        
+
         if not transformed_flg:
             transformed_tkns.append(token)
-
+    
+    # Reconstruct the text with proper spacing
     detokenizer = TreebankWordDetokenizer()
     example["text"] = detokenizer.detokenize(transformed_tkns)
 
