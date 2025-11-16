@@ -129,14 +129,17 @@ def custom_transform(example):
                 transformed = True
         """
 
+        """
         if not transformed and random.random() < 0.25:
             new_token = token.upper()
             transformed_tokens.append(new_token)
             transformed = True
+        """
         
         if not transformed:
             transformed_tokens.append(token)
-    
+
+
     # Reconstruct the text with proper spacing
     detokenizer = TreebankWordDetokenizer()
     example["text"] = detokenizer.detokenize(transformed_tokens)
