@@ -26,16 +26,86 @@ class T5Dataset(Dataset):
               T5Tokenizer should serve that purpose.
             * Class behavior should be different on the test set.
         '''
-        # TODO
+        self.split = split
+        self.tokenizer = T5TokenizerFast.from_pretrained("google-t5/t5-small")
+        
+        # Load NL queries
+        nl_path = os.path.join(data_folder, f"{split}.nl")
+        self.nl_texts = load_lines(nl_path)
+        
+        # Load SQL queries (only for train/dev, not test)
+        if split != "test":
+            sql_path = os.path.join(data_folder, f"{split}.sql")
+            self.sql_texts = load_lines(sql_path)
+            assert len(self.nl_texts) == len(self.sql_texts), "NL and SQL files must have same length"
+        else:
+            self.sql_texts = None
+        
+        # Store preprocessed texts for statistics computation
+        self.processed_nl_texts = []
+        for nl in self.nl_texts:
+            # Add prefix for preprocessing (this is what T5 sees during training)
+            processed_nl = "translate to SQL: " + nl
+            self.processed_nl_texts.append(processed_nl)
 
-    def process_data(self, data_folder, split, tokenizer):
-        # TODO
-    
     def __len__(self):
-        # TODO
+        return len(self.nl_texts)
 
     def __getitem__(self, idx):
-        # TODO
+        # Get preprocessed NL text
+        nl_text = self.processed_nl_texts[idx]
+        
+        # Tokenize encoder input (NL query with prefix)
+        encoder_inputs = self.tokenizer(
+            nl_text,
+            max_length=512,
+            padding=False,
+            truncation=True,
+            return_tensors="pt"
+        )
+        encoder_ids = encoder_inputs["input_ids"].squeeze(0)  # Remove batch dimension
+        
+        if self.split == "test":
+            # For test set, we don't have SQL targets
+            # Return encoder data and initial decoder token for generation
+            # T5 uses extra_id_0 as BOS token for decoder (token ID 32000)
+            bos_token_id = self.tokenizer.convert_tokens_to_ids("<extra_id_0>")
+            if bos_token_id == self.tokenizer.unk_token_id:
+                # Fallback: use pad_token_id if extra_id_0 not found
+                bos_token_id = self.tokenizer.pad_token_id
+            initial_decoder_token = torch.tensor([bos_token_id])
+            return encoder_ids, initial_decoder_token
+        else:
+            # For train/dev, we have SQL targets
+            sql_text = self.sql_texts[idx]
+            
+            # Tokenize decoder target (SQL query)
+            decoder_targets = self.tokenizer(
+                sql_text,
+                max_length=512,
+                padding=False,
+                truncation=True,
+                return_tensors="pt"
+            )
+            decoder_target_ids = decoder_targets["input_ids"].squeeze(0)
+            
+            # Decoder input: shift targets right by one position for teacher forcing
+            # Add BOS token (extra_id_0) at the beginning
+            # T5 uses extra_id_0 (token ID 32000) as BOS token for decoder
+            bos_token_id = self.tokenizer.convert_tokens_to_ids("<extra_id_0>")
+            if bos_token_id == self.tokenizer.unk_token_id:
+                # Fallback: use pad_token_id if extra_id_0 not found
+                bos_token_id = self.tokenizer.pad_token_id
+            
+            decoder_input_ids = torch.cat([
+                torch.tensor([bos_token_id]),
+                decoder_target_ids[:-1]  # Remove last token (EOS) and shift
+            ])
+            
+            # Initial decoder token for generation (just BOS)
+            initial_decoder_token = torch.tensor([bos_token_id])
+            
+            return encoder_ids, decoder_input_ids, decoder_target_ids, initial_decoder_token
 
 def normal_collate_fn(batch):
     '''
@@ -53,8 +123,24 @@ def normal_collate_fn(batch):
         * decoder_targets: The target tokens with which to train the decoder (the tokens following each decoder input)
         * initial_decoder_inputs: The very first input token to be decoder (only to be used in evaluation)
     '''
-    # TODO
-    return [], [], [], [], []
+    # Unpack batch: each item is (encoder_ids, decoder_input_ids, decoder_target_ids, initial_decoder_token)
+    encoder_ids_list = [item[0] for item in batch]
+    decoder_input_ids_list = [item[1] for item in batch]
+    decoder_target_ids_list = [item[2] for item in batch]
+    initial_decoder_tokens_list = [item[3] for item in batch]
+    
+    # Pad sequences to same length
+    encoder_ids = pad_sequence(encoder_ids_list, batch_first=True, padding_value=PAD_IDX)
+    decoder_input_ids = pad_sequence(decoder_input_ids_list, batch_first=True, padding_value=PAD_IDX)
+    decoder_target_ids = pad_sequence(decoder_target_ids_list, batch_first=True, padding_value=PAD_IDX)
+    
+    # Create attention mask for encoder (1 for real tokens, 0 for padding)
+    encoder_mask = (encoder_ids != PAD_IDX).long()
+    
+    # Initial decoder tokens (already single tokens, just stack them)
+    initial_decoder_inputs = torch.stack(initial_decoder_tokens_list)
+    
+    return encoder_ids, encoder_mask, decoder_input_ids, decoder_target_ids, initial_decoder_inputs
 
 def test_collate_fn(batch):
     '''
@@ -69,8 +155,20 @@ def test_collate_fn(batch):
         * encoder_mask: Mask of shape BxT associated with padding tokens in the encoder input
         * initial_decoder_inputs: The very first input token to be decoder (only to be used in evaluation)
     '''
-    # TODO
-    return [], [], []
+    # Unpack batch: each item is (encoder_ids, initial_decoder_token)
+    encoder_ids_list = [item[0] for item in batch]
+    initial_decoder_tokens_list = [item[1] for item in batch]
+    
+    # Pad encoder sequences
+    encoder_ids = pad_sequence(encoder_ids_list, batch_first=True, padding_value=PAD_IDX)
+    
+    # Create attention mask for encoder
+    encoder_mask = (encoder_ids != PAD_IDX).long()
+    
+    # Initial decoder tokens
+    initial_decoder_inputs = torch.stack(initial_decoder_tokens_list)
+    
+    return encoder_ids, encoder_mask, initial_decoder_inputs
 
 def get_dataloader(batch_size, split):
     data_folder = 'data'
