@@ -101,7 +101,7 @@ def custom_transform(example):
             synonyms = []
             # Use first 2 synsets (most significant matches) for better variety while avoiding obscure words
             if synsets:
-                for syn in synsets[:5]:
+                for syn in synsets:
                     for lemma in syn.lemmas():
                         synonym = lemma.name().replace('_', ' ')
                         if (' ' not in synonym and synonym.isalpha() and 
@@ -129,7 +129,7 @@ def custom_transform(example):
                 transformed = True
         """
 
-        if not transformed and random.random() < 0.20:
+        if not transformed and random.random() < 0.25:
             new_token = token.upper()
             transformed_tokens.append(new_token)
             transformed = True
