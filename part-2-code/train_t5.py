@@ -263,7 +263,8 @@ def main():
     model.eval()
     
     # Dev set
-    experiment_name = 'ft_experiment'
+    # Use custom experiment name if provided, otherwise default to 'ft_experiment' for backward compatibility
+    experiment_name = args.experiment_name
     model_type = 'ft' if args.finetune else 'scr'
     gt_sql_path = os.path.join(f'data/dev.sql')
     gt_record_path = os.path.join(f'records/ground_truth_dev.pkl')
