@@ -99,17 +99,20 @@ def initialize_model_and_tokenizer(model_name, to_quantize=False):
     To access to the model on HuggingFace, you need to log in and review the 
     conditions and access the model's content.
     '''
+    hf_token = "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"
+    
     if model_name == "gemma":
         model_id = "google/gemma-1.1-2b-it"
-        tokenizer = GemmaTokenizerFast.from_pretrained(model_id)
+        tokenizer = GemmaTokenizerFast.from_pretrained(model_id, token=hf_token)
         # Native weights exported in bfloat16 precision, but you can use a different precision if needed
         model = GemmaForCausalLM.from_pretrained(
             model_id,
-            torch_dtype=torch.bfloat16, 
+            torch_dtype=torch.bfloat16,
+            token=hf_token,
         ).to(DEVICE)
     elif model_name == "codegemma":
         model_id = "google/codegemma-7b-it"
-        tokenizer = GemmaTokenizer.from_pretrained(model_id)
+        tokenizer = GemmaTokenizer.from_pretrained(model_id, token=hf_token)
         if to_quantize:
             nf4_config = BitsAndBytesConfig(
                 load_in_4bit=True,
@@ -117,10 +120,12 @@ def initialize_model_and_tokenizer(model_name, to_quantize=False):
             )
             model = AutoModelForCausalLM.from_pretrained(model_id,
                                                         torch_dtype=torch.bfloat16,
-                                                        config=nf4_config).to(DEVICE)
+                                                        config=nf4_config,
+                                                        token=hf_token).to(DEVICE)
         else:
             model = AutoModelForCausalLM.from_pretrained(model_id,
-                                                        torch_dtype=torch.bfloat16).to(DEVICE)
+                                                        torch_dtype=torch.bfloat16,
+                                                        token=hf_token).to(DEVICE)
     return tokenizer, model
 
 
