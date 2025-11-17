@@ -88,21 +88,12 @@ def train(args, model, train_loader, dev_loader, optimizer, scheduler):
         if record_f1 > best_f1:
             best_f1 = record_f1
             epochs_since_improvement = 0
-            # Log sample generated SQL vs ground truth when F1 improves
-            from utils import read_queries
-            gt_queries = read_queries(gt_sql_path)
-            model_queries = read_queries(model_sql_path)
-            if len(model_queries) > 0 and len(gt_queries) > 0:
-                sample_idx = 0  # Show first example
-                print(f"  [Best F1: {best_f1:.4f}] Sample - GT: {gt_queries[sample_idx][:100]}...")
-                print(f"  [Best F1: {best_f1:.4f}] Sample - Generated: {model_queries[sample_idx][:100]}...")
         else:
             epochs_since_improvement += 1
 
         save_model(checkpoint_dir, model, best=False)
         if epochs_since_improvement == 0:
             save_model(checkpoint_dir, model, best=True)
-            print(f"  [Saved best model] Best F1: {best_f1:.4f}")
 
         if epochs_since_improvement >= args.patience_epochs:
             break
@@ -205,13 +196,7 @@ def eval_epoch(args, model, dev_loader, gt_sql_pth, model_sql_path, gt_record_pa
     
     # Save generated SQL queries and records
     save_queries_and_records(all_generated_sql, model_sql_path, model_record_path)
-    
-    # Log sample generated SQL for debugging
-    if len(all_generated_sql) > 0:
-        sample_sql = all_generated_sql[0][:150] if len(all_generated_sql[0]) > 150 else all_generated_sql[0]
-        print(f"  Sample generated SQL: {sample_sql}...")
-    
-    # Compute metrics
+        # Compute metrics
     sql_em, record_em, record_f1, error_msgs = compute_metrics(
         gt_sql_pth, model_sql_path, gt_record_path, model_record_path
     )
