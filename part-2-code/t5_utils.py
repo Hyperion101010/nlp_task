@@ -21,10 +21,8 @@ def initialize_model(args):
     from scratch.
     '''
     if args.finetune:
-        # Load pretrained T5-small for fine-tuning
         model = T5ForConditionalGeneration.from_pretrained("google-t5/t5-small")
     else:
-        # Initialize from scratch (for extra credit)
         config = T5Config.from_pretrained("google-t5/t5-small")
         model = T5ForConditionalGeneration(config)
     
@@ -39,7 +37,6 @@ def mkdir(dirpath):
             pass
 
 def save_model(checkpoint_dir, model, best):
-    # Save model checkpoint to be able to load the model later
     mkdir(checkpoint_dir)
     if best:
         path = os.path.join(checkpoint_dir, "best_model.pt")
@@ -48,7 +45,6 @@ def save_model(checkpoint_dir, model, best):
     torch.save(model.state_dict(), path)
 
 def load_model_from_checkpoint(args, best):
-    # Load model from a checkpoint
     model = initialize_model(args)
     if best:
         path = os.path.join(args.checkpoint_dir, "best_model.pt")

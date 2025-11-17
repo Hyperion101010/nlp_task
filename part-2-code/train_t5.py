@@ -59,11 +59,14 @@ def train(args, model, train_loader, dev_loader, optimizer, scheduler):
     checkpoint_dir = os.path.join('checkpoints', f'{model_type}_experiments', args.experiment_name)
     os.makedirs(checkpoint_dir, exist_ok=True)
     args.checkpoint_dir = checkpoint_dir
-    experiment_name = 'ft_experiment'
+
+    # Same thing that comes from default experiment name
+    experiment_name = 'experiment'
+
     gt_sql_path = os.path.join(f'data/dev.sql')
     gt_record_path = os.path.join(f'records/ground_truth_dev.pkl')
-    model_sql_path = os.path.join(f'results/t5_{model_type}_{experiment_name}_dev.sql')
-    model_record_path = os.path.join(f'records/t5_{model_type}_{experiment_name}_dev.pkl')
+    model_sql_path = os.path.join(f'results/t5_{model_type}_{args.experiment_name}_dev.sql')
+    model_record_path = os.path.join(f'records/t5_{model_type}_{args.experiment_name}_dev.pkl')
     for epoch in range(args.max_n_epochs):
         tr_loss = train_epoch(args, model, train_loader, optimizer, scheduler)
         print(f"Epoch {epoch}: Average train loss was {tr_loss}")
@@ -144,7 +147,6 @@ def eval_epoch(args, model, dev_loader, gt_sql_pth, model_sql_path, gt_record_pa
     model.eval()
     tokenizer = T5TokenizerFast.from_pretrained("google-t5/t5-small")
     
-    # Get decoder start token ID (extra_id_0)
     decoder_start_token_id = tokenizer.convert_tokens_to_ids("<extra_id_0>")
     if decoder_start_token_id == tokenizer.unk_token_id:
         decoder_start_token_id = tokenizer.pad_token_id
@@ -163,7 +165,6 @@ def eval_epoch(args, model, dev_loader, gt_sql_pth, model_sql_path, gt_record_pa
             decoder_input = decoder_input.to(DEVICE)
             decoder_targets = decoder_targets.to(DEVICE)
             
-            # Compute loss
             logits = model(
                 input_ids=encoder_input,
                 attention_mask=encoder_mask,
@@ -177,31 +178,25 @@ def eval_epoch(args, model, dev_loader, gt_sql_pth, model_sql_path, gt_record_pa
             total_loss += loss.item() * num_tokens
             total_tokens += num_tokens
             
-            # Generate SQL queries
             generated_ids = model.generate(
                 input_ids=encoder_input,
                 attention_mask=encoder_mask,
                 max_length=512,
-                num_beams=2,  # Greedy decoding
+                num_beams=1,
                 decoder_start_token_id=decoder_start_token_id,
                 pad_token_id=tokenizer.pad_token_id,
                 eos_token_id=tokenizer.eos_token_id,
             )
             
-            # Decode generated SQL - only take the generated part (not the input)
-            # For T5, generated_ids includes the full sequence, but we only want the decoder output
-            # The decoder output starts after the input length
             generated_sql = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
             all_generated_sql.extend(generated_sql)
     
-    # Save generated SQL queries and records
     save_queries_and_records(all_generated_sql, model_sql_path, model_record_path)
-        # Compute metrics
+
     sql_em, record_em, record_f1, error_msgs = compute_metrics(
         gt_sql_pth, model_sql_path, gt_record_path, model_record_path
     )
     
-    # Calculate error rate (percentage of queries that led to SQL errors)
     error_rate = sum(1 for msg in error_msgs if msg != "") / len(error_msgs) if error_msgs else 0
     
     eval_loss = total_loss / total_tokens if total_tokens > 0 else 0
@@ -216,7 +211,6 @@ def test_inference(args, model, test_loader, model_sql_path, model_record_path):
     model.eval()
     tokenizer = T5TokenizerFast.from_pretrained("google-t5/t5-small")
     
-    # Get decoder start token ID (extra_id_0)
     decoder_start_token_id = tokenizer.convert_tokens_to_ids("<extra_id_0>")
     if decoder_start_token_id == tokenizer.unk_token_id:
         decoder_start_token_id = tokenizer.pad_token_id
@@ -230,22 +224,19 @@ def test_inference(args, model, test_loader, model_sql_path, model_record_path):
             encoder_input = encoder_input.to(DEVICE)
             encoder_mask = encoder_mask.to(DEVICE)
             
-            # Generate SQL queries
             generated_ids = model.generate(
                 input_ids=encoder_input,
                 attention_mask=encoder_mask,
                 max_length=512,
-                num_beams=2,  # Greedy decoding
+                num_beams=1,
                 decoder_start_token_id=decoder_start_token_id,
                 pad_token_id=tokenizer.pad_token_id,
                 eos_token_id=tokenizer.eos_token_id,
             )
             
-            # Decode generated SQL
             generated_sql = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
             all_generated_sql.extend(generated_sql)
     
-    # Save generated SQL queries and records
     save_queries_and_records(all_generated_sql, model_sql_path, model_record_path)
     
     print(f"Generated {len(all_generated_sql)} SQL queries for test set")
@@ -272,12 +263,11 @@ def main():
     model.eval()
     
     # Dev set
-    experiment_name = 'ft_experiment'
     model_type = 'ft' if args.finetune else 'scr'
     gt_sql_path = os.path.join(f'data/dev.sql')
     gt_record_path = os.path.join(f'records/ground_truth_dev.pkl')
-    model_sql_path = os.path.join(f'results/t5_{model_type}_{experiment_name}_dev.sql')
-    model_record_path = os.path.join(f'records/t5_{model_type}_{experiment_name}_dev.pkl')
+    model_sql_path = os.path.join(f'results/t5_{model_type}_{args.experiment_name}_dev.sql')
+    model_record_path = os.path.join(f'records/t5_{model_type}_{args.experiment_name}_dev.pkl')
     dev_loss, dev_record_f1, dev_record_em, dev_sql_em, dev_error_rate = eval_epoch(args, model, dev_loader,
                                                                                     gt_sql_path, model_sql_path,
                                                                                     gt_record_path, model_record_path)
@@ -285,8 +275,8 @@ def main():
     print(f"Dev set results: {dev_error_rate*100:.2f}% of the generated outputs led to SQL errors")
 
     # Test set
-    model_sql_path = os.path.join(f'results/t5_{model_type}_{experiment_name}_test.sql')
-    model_record_path = os.path.join(f'records/t5_{model_type}_{experiment_name}_test.pkl')
+    model_sql_path = os.path.join(f'results/t5_{model_type}_{args.experiment_name}_test.sql')
+    model_record_path = os.path.join(f'records/t5_{model_type}_{args.experiment_name}_test.pkl')
     test_inference(args, model, test_loader, model_sql_path, model_record_path)
 
 if __name__ == "__main__":

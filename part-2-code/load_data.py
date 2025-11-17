@@ -13,6 +13,9 @@ import torch
 
 PAD_IDX = 0
 
+def preprocess_nl_query(nl_query: str) -> str:
+    return "translate to SQL: " + nl_query
+
 class T5Dataset(Dataset):
 
     def __init__(self, data_folder, split):
@@ -29,26 +32,21 @@ class T5Dataset(Dataset):
         self.split = split
         self.tokenizer = T5TokenizerFast.from_pretrained("google-t5/t5-small")
         
-        # Cache BOS token ID (extra_id_0) for decoder
-        # T5 tokenizers from HuggingFace include extra_id_0 through extra_id_99 by default
-        # Try extra_id_0 first, then fallback to other extra_id tokens if needed
+        # Get BOS token ID (<extra_id_0>) for decoder, with fallback to other extra_id tokens if needed
         self.bos_token_id = self.tokenizer.convert_tokens_to_ids("<extra_id_0>")
         if self.bos_token_id == self.tokenizer.unk_token_id:
-            # Fallback: try other extra_id tokens
             for i in range(1, 100):
                 token_id = self.tokenizer.convert_tokens_to_ids(f"<extra_id_{i}>")
                 if token_id != self.tokenizer.unk_token_id:
                     self.bos_token_id = token_id
                     break
             else:
-                # Last resort: use pad_token_id (not ideal, but prevents crash)
                 self.bos_token_id = self.tokenizer.pad_token_id
         
         # Load NL queries
         nl_path = os.path.join(data_folder, f"{split}.nl")
         self.nl_texts = load_lines(nl_path)
         
-        # Load SQL queries (only for train/dev, not test)
         if split != "test":
             sql_path = os.path.join(data_folder, f"{split}.sql")
             self.sql_texts = load_lines(sql_path)
@@ -56,21 +54,17 @@ class T5Dataset(Dataset):
         else:
             self.sql_texts = None
         
-        # Store preprocessed texts for statistics computation
         self.processed_nl_texts = []
         for nl in self.nl_texts:
-            # Add prefix for preprocessing (this is what T5 sees during training)
-            processed_nl = "translate to SQL: " + nl
+            processed_nl = preprocess_nl_query(nl)
             self.processed_nl_texts.append(processed_nl)
 
     def __len__(self):
         return len(self.nl_texts)
 
     def __getitem__(self, idx):
-        # Get preprocessed NL text
         nl_text = self.processed_nl_texts[idx]
         
-        # Tokenize encoder input (NL query with prefix)
         encoder_inputs = self.tokenizer(
             nl_text,
             max_length=512,
@@ -78,18 +72,14 @@ class T5Dataset(Dataset):
             truncation=True,
             return_tensors="pt"
         )
-        encoder_ids = encoder_inputs["input_ids"].squeeze(0)  # Remove batch dimension
+        encoder_ids = encoder_inputs["input_ids"].squeeze(0)
         
         if self.split == "test":
-            # For test set, we don't have SQL targets
-            # Return encoder data and initial decoder token for generation
             initial_decoder_token = torch.tensor([self.bos_token_id])
             return encoder_ids, initial_decoder_token
         else:
-            # For train/dev, we have SQL targets
             sql_text = self.sql_texts[idx]
             
-            # Tokenize decoder target (SQL query)
             decoder_targets = self.tokenizer(
                 sql_text,
                 max_length=512,
@@ -99,14 +89,11 @@ class T5Dataset(Dataset):
             )
             decoder_target_ids = decoder_targets["input_ids"].squeeze(0)
             
-            # Decoder input: shift targets right by one position for teacher forcing
-            # Add BOS token (extra_id_0) at the beginning
             decoder_input_ids = torch.cat([
                 torch.tensor([self.bos_token_id]),
-                decoder_target_ids[:-1]  # Remove last token (EOS) and shift
+                decoder_target_ids[:-1]
             ])
             
-            # Initial decoder token for generation (just BOS)
             initial_decoder_token = torch.tensor([self.bos_token_id])
             
             return encoder_ids, decoder_input_ids, decoder_target_ids, initial_decoder_token
@@ -127,21 +114,17 @@ def normal_collate_fn(batch):
         * decoder_targets: The target tokens with which to train the decoder (the tokens following each decoder input)
         * initial_decoder_inputs: The very first input token to be decoder (only to be used in evaluation)
     '''
-    # Unpack batch: each item is (encoder_ids, decoder_input_ids, decoder_target_ids, initial_decoder_token)
     encoder_ids_list = [item[0] for item in batch]
     decoder_input_ids_list = [item[1] for item in batch]
     decoder_target_ids_list = [item[2] for item in batch]
     initial_decoder_tokens_list = [item[3] for item in batch]
     
-    # Pad sequences to same length
     encoder_ids = pad_sequence(encoder_ids_list, batch_first=True, padding_value=PAD_IDX)
     decoder_input_ids = pad_sequence(decoder_input_ids_list, batch_first=True, padding_value=PAD_IDX)
     decoder_target_ids = pad_sequence(decoder_target_ids_list, batch_first=True, padding_value=PAD_IDX)
     
-    # Create attention mask for encoder (1 for real tokens, 0 for padding)
     encoder_mask = (encoder_ids != PAD_IDX).long()
     
-    # Initial decoder tokens (already single tokens, just stack them)
     initial_decoder_inputs = torch.stack(initial_decoder_tokens_list)
     
     return encoder_ids, encoder_mask, decoder_input_ids, decoder_target_ids, initial_decoder_inputs
@@ -159,17 +142,13 @@ def test_collate_fn(batch):
         * encoder_mask: Mask of shape BxT associated with padding tokens in the encoder input
         * initial_decoder_inputs: The very first input token to be decoder (only to be used in evaluation)
     '''
-    # Unpack batch: each item is (encoder_ids, initial_decoder_token)
     encoder_ids_list = [item[0] for item in batch]
     initial_decoder_tokens_list = [item[1] for item in batch]
     
-    # Pad encoder sequences
     encoder_ids = pad_sequence(encoder_ids_list, batch_first=True, padding_value=PAD_IDX)
     
-    # Create attention mask for encoder
     encoder_mask = (encoder_ids != PAD_IDX).long()
     
-    # Initial decoder tokens
     initial_decoder_inputs = torch.stack(initial_decoder_tokens_list)
     
     return encoder_ids, encoder_mask, initial_decoder_inputs
