@@ -1,0 +1,1533 @@
+================================================================================
+RECORD MISMATCHES - Experiment: experiment
+Model Type: ft
+================================================================================
+
+Total queries: 466
+Queries with record mismatches (different results): 61
+Record match rate: 86.91%
+
+================================================================================
+ALL RECORD MISMATCHES (Different fetched results)
+================================================================================
+
+Example 1 (Index 18):
+NL Query: what's the lowest round trip fare from dallas to any city
+
+Gold SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1 , flight_fare flight_fare_1 , flight flight_1 , airport_service airport_service_1 , city city_1 WHERE fare_1.round_trip_cost =( SELECT MIN( fare_1.round_trip_cost ) FROM fare fare_1 , flight_fare flight_fare_1 , flight flight_1 , airport_service airport_service_1 , city city_1 WHERE fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS' ) AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS'
+
+Predicted SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1, flight_fare flight_fare_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE fare_1.round_trip_cost =( SELECT MIN( fare_1.round_trip_cost ) FROM fare fare_1, flight_fare flight_fare_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DALLAS' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DALLAS' ) AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DALLAS'
+
+Gold Records (4 rows):
+  (7010016,)
+  (7010017,)
+  (7010058,)
+  (7010059,)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 2 (Index 22):
+NL Query: show me the flights arriving in baltimore from philadelphia at about 4 o'clock
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHILADELPHIA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BALTIMORE' AND( flight_1.arrival_time >= 1530 AND flight_1.arrival_time <= 1630 ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHILADELPHIA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BALTIMORE' AND( flight_1.arrival_time >= 1630 AND flight_1.arrival_time = 1630 ) )
+
+Gold Records (1 rows):
+  (101336,)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 3 (Index 25):
+NL Query: what are the flights available between 10am and 3pm between pittsburgh and fort worth
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'FORT WORTH' AND( flight_1.departure_time >= 1000 AND flight_1.departure_time <= 1500 ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'FORT WORTH' AND( flight_1.departure_time >= 1000 AND flight_1.departure_time = 1515 ) )
+
+Gold Records (5 rows):
+  (103540,)
+  (309774,)
+  (103541,)
+  (103542,)
+  (309775,)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 4 (Index 32):
+NL Query: now i'd like flights from philadelphia to pittsburgh leaving between 430 and 530pm
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHILADELPHIA' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PITTSBURGH' ) AND( flight_1.departure_time >= 1630 AND flight_1.departure_time <= 1730 )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHILADELPHIA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PITTSBURGH' AND( flight_1.departure_time >= 1630 AND flight_1.departure_time = 1600 ) )
+
+Gold Records (1 rows):
+  (110369,)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 5 (Index 36):
+NL Query: i need an early flight from dallas to houston
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'HOUSTON' AND( flight_1.departure_time >= 0 AND flight_1.departure_time <= 1000 ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.departure_time BETWEEN 0 AND 800 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'HOUSTON' )
+
+Gold Records (22 rows):
+  (104421,)
+  (104422,)
+  (104423,)
+  (104424,)
+  (104425,)
+  (104426,)
+  (104427,)
+  (104428,)
+  (104429,)
+  (104838,)
+  ... (12 more rows)
+
+Predicted Records (12 rows):
+  (104421,)
+  (104422,)
+  (104423,)
+  (104424,)
+  (104425,)
+  (104838,)
+  (104463,)
+  (104464,)
+  (104869,)
+  (104870,)
+  ... (2 more rows)
+
+--------------------------------------------------------------------------------
+
+Example 6 (Index 38):
+NL Query: what flights does delta have from denver to dallas after 5
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.airline_code = 'DL' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DALLAS' AND flight_1.departure_time > 500 ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.airline_code = 'DL' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DALLAS' AND flight_1.departure_time > 1700 ) )
+
+Gold Records (5 rows):
+  (103241,)
+  (103245,)
+  (103253,)
+  (103254,)
+  (103258,)
+
+Predicted Records (1 rows):
+  (103258,)
+
+--------------------------------------------------------------------------------
+
+Example 7 (Index 52):
+NL Query: what is the price of american airlines flight 19 from new york to los angeles
+
+Gold SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1 , flight_fare flight_fare_1 , flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.airline_code = 'AA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'NEW YORK' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'LOS ANGELES' AND flight_1.flight_number = 19 ) )
+
+Predicted SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1, flight_fare flight_fare_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.airline_code = 'AA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'NEW YORK' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'LOS ANGELES' )
+
+Gold Records (3 rows):
+  (7013467,)
+  (7013479,)
+  (7013530,)
+
+Predicted Records (27 rows):
+  (7001786,)
+  (7001792,)
+  (7001801,)
+  (7013424,)
+  (7013478,)
+  (7013529,)
+  (7013538,)
+  (7013467,)
+  (7013479,)
+  (7013530,)
+  ... (17 more rows)
+
+--------------------------------------------------------------------------------
+
+Example 8 (Index 62):
+NL Query: us air flights departing from charlotte around 1pm
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 WHERE flight_1.airline_code = 'US' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'CHARLOTTE' AND( flight_1.departure_time >= 1230 AND flight_1.departure_time <= 1330 ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1 WHERE flight_1.airline_code = 'US' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'CHARLOTTE' AND( flight_1.departure_time >= 1330 AND flight_1.departure_time = 1330 ) )
+
+Gold Records (14 rows):
+  (102441,)
+  (104083,)
+  (104629,)
+  (104630,)
+  (106914,)
+  (107147,)
+  (107550,)
+  (107551,)
+  (108150,)
+  (108151,)
+  ... (4 more rows)
+
+Predicted Records (11 rows):
+  (102441,)
+  (104083,)
+  (104629,)
+  (104630,)
+  (106914,)
+  (108150,)
+  (108151,)
+  (110185,)
+  (302015,)
+  (305223,)
+  ... (1 more rows)
+
+--------------------------------------------------------------------------------
+
+Example 9 (Index 69):
+NL Query: please list nonstop flights from las vegas to new york on america west
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.airline_code = 'HP' AND( flight_1.stops = 0 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'LAS VEGAS' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'NEW YORK' ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.stops = 0 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'LAS VEGAS' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'NEW YORK' )
+
+Gold Records (2 rows):
+  (105389,)
+  (105392,)
+
+Predicted Records (3 rows):
+  (104215,)
+  (105389,)
+  (105392,)
+
+--------------------------------------------------------------------------------
+
+Example 10 (Index 100):
+NL Query: train to newark
+
+Gold SQL:
+SELECT DISTINCT ground_service_1.transport_type FROM ground_service ground_service_1 , city city_1 WHERE ground_service_1.city_code = city_1.city_code AND city_1.city_name = 'NEWARK' AND ground_service_1.transport_type = 'RAPID TRANSIT'
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'NEWARK' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'NEWARK'
+
+Gold Records (1 rows):
+  ('RAPID TRANSIT',)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 11 (Index 106):
+NL Query: what is the round trip first class fare on united from boston to san francisco
+
+Gold SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1 , flight_fare flight_fare_1 , flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , flight_fare flight_fare_2 , fare fare_2 , fare_basis fare_basis_1 WHERE fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.airline_code = 'UA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' AND flight_1.flight_id = flight_fare_2.flight_id AND flight_fare_2.fare_id = fare_2.fare_id AND fare_2.round_trip_cost IS NOT NULL AND( fare_2.fare_basis_code = fare_basis_1.fare_basis_code AND fare_basis_1.class_type = 'FIRST' AND 1 = 1 ) ) )
+
+Predicted SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1, fare_basis fare_basis_1, flight_fare flight_fare_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE fare_1.round_trip_cost IS NOT NULL AND fare_1.fare_basis_code = fare_basis_1.fare_basis_code AND fare_basis_1.class_type = 'FIRST' AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.airline_code = 'UA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' )
+
+Gold Records (10 rows):
+  (7024615,)
+  (7024625,)
+  (7024636,)
+  (7024638,)
+  (9084381,)
+  (9084383,)
+  (9084415,)
+  (9084417,)
+  (9084436,)
+  (9084438,)
+
+Predicted Records (3 rows):
+  (7024615,)
+  (9084381,)
+  (9084383,)
+
+--------------------------------------------------------------------------------
+
+Example 12 (Index 114):
+NL Query: are there any flights from pittsburgh to boston that leave between noon and 5 o'clock
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BOSTON' AND( flight_1.departure_time >= 1200 AND flight_1.departure_time <= 1700 ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BOSTON' AND( flight_1.departure_time >= 1200 AND flight_1.departure_time = 1700 ) )
+
+Gold Records (4 rows):
+  (307350,)
+  (101012,)
+  (101013,)
+  (101014,)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 13 (Index 115):
+NL Query: what is ord
+
+Gold SQL:
+SELECT DISTINCT airport_1.airport_code FROM airport airport_1 WHERE airport_1.airport_code = 'ORD'
+
+Predicted SQL:
+SELECT DISTINCT state_1.state_code FROM state state_1 WHERE state_1.state_code = 'ASD';
+
+Gold Records (1 rows):
+  ('ORD',)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 14 (Index 117):
+NL Query: show me about the ground transportation in boston
+
+Gold SQL:
+SELECT DISTINCT ground_service_1.transport_type , ground_service_1.ground_fare FROM ground_service ground_service_1 , city city_1 WHERE ground_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON'
+
+Predicted SQL:
+SELECT DISTINCT ground_service_1.transport_type FROM ground_service ground_service_1, city city_1 WHERE ground_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON'
+
+Gold Records (3 rows):
+  ('AIR TAXI OPERATION', None)
+  ('LIMOUSINE', 5)
+  ('RENTAL CAR', None)
+
+Predicted Records (3 rows):
+  ('AIR TAXI OPERATION',)
+  ('LIMOUSINE',)
+  ('RENTAL CAR',)
+
+--------------------------------------------------------------------------------
+
+Example 15 (Index 120):
+NL Query: where does canadian airlines international fly
+
+Gold SQL:
+SELECT DISTINCT airport_1.airport_code FROM airport airport_1 , flight flight_1 WHERE airport_1.airport_code = flight_1.to_airport AND flight_1.airline_code = 'CP' AND 1 = 1
+
+Predicted SQL:
+SELECT DISTINCT airport_1.airport_code FROM airport airport_1 WHERE airport_1.airport_code = 'CP'
+
+Gold Records (6 rows):
+  ('CMH',)
+  ('IND',)
+  ('PIT',)
+  ('YKZ',)
+  ('YUL',)
+  ('YYZ',)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 16 (Index 125):
+NL Query: i want a flight from atlanta to washington that leaves after 3pm
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'WASHINGTON' AND flight_1.departure_time > 1500 )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'WASHINGTON' AND flight_1.departure_time > 1530 )
+
+Gold Records (18 rows):
+  (101181,)
+  (101182,)
+  (301026,)
+  (101183,)
+  (102381,)
+  (301047,)
+  (102382,)
+  (301048,)
+  (102383,)
+  (301049,)
+  ... (8 more rows)
+
+Predicted Records (16 rows):
+  (101181,)
+  (101182,)
+  (301026,)
+  (101183,)
+  (301047,)
+  (102382,)
+  (301048,)
+  (102383,)
+  (301049,)
+  (102384,)
+  ... (6 more rows)
+
+--------------------------------------------------------------------------------
+
+Example 17 (Index 142):
+NL Query: does any airline have an early afternoon flight from boston to denver
+
+Gold SQL:
+SELECT DISTINCT airline_1.airline_code FROM airline airline_1 , flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE airline_1.airline_code = flight_1.airline_code AND flight_1.departure_time BETWEEN 1200 AND 1400 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DENVER' )
+
+Predicted SQL:
+SELECT DISTINCT airline_1.airline_code FROM airline airline_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE airline_1.airline_code = flight_1.airline_code AND flight_1.departure_time BETWEEN 1200 AND 1800 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DENVER' )
+
+Gold Records (1 rows):
+  ('TW',)
+
+Predicted Records (6 rows):
+  ('TW',)
+  ('CO',)
+  ('DL',)
+  ('NW',)
+  ('UA',)
+  ('US',)
+
+--------------------------------------------------------------------------------
+
+Example 18 (Index 143):
+NL Query: show me flights on monday from philadelphia to boston after 7am
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 , date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHILADELPHIA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BOSTON' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 2 AND date_day_1.day_number = 21 AND flight_1.departure_time > 700 ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1, date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHILADELPHIA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BOSTON' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 2 AND date_day_1.day_number = 21 AND flight_1.departure_time > 1800 ) )
+
+Gold Records (27 rows):
+  (100972,)
+  (100973,)
+  (100974,)
+  (100975,)
+  (100976,)
+  (100977,)
+  (100978,)
+  (100979,)
+  (100980,)
+  (100981,)
+  ... (17 more rows)
+
+Predicted Records (6 rows):
+  (100993,)
+  (100994,)
+  (100995,)
+  (100996,)
+  (100997,)
+  (100999,)
+
+--------------------------------------------------------------------------------
+
+Example 19 (Index 150):
+NL Query: show me the list of flights from dallas to baltimore on american and delta airlines
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , airport_service airport_service_3 , city city_3 WHERE( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS' AND flight_1.from_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'FORT WORTH' ) AND( flight_1.to_airport = airport_service_3.airport_code AND airport_service_3.city_code = city_3.city_code AND city_3.city_name = 'BALTIMORE' AND(( flight_1.airline_code = 'DL' AND 1 = 1 ) OR( flight_1.airline_code = 'AA' AND 1 = 1 ) ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.airline_code = 'AA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BALTIMORE' )
+
+Gold Records (6 rows):
+  (101234,)
+  (101235,)
+  (101236,)
+  (101237,)
+  (101238,)
+  (101239,)
+
+Predicted Records (4 rows):
+  (101234,)
+  (101236,)
+  (101238,)
+  (101239,)
+
+--------------------------------------------------------------------------------
+
+Example 20 (Index 153):
+NL Query: i need a flight this sunday from miami to las vegas and i would prefer a morning flight
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 , date_day date_day_1 WHERE flight_1.departure_time BETWEEN 0 AND 1200 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'MIAMI' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'LAS VEGAS' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 8 AND date_day_1.day_number = 27 ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1, date_day date_day_1 WHERE flight_1.departure_time BETWEEN 0 AND 800 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'MIAMI' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'LAS VEGAS' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 8 AND date_day_1.day_number = 27 ) )
+
+Gold Records (3 rows):
+  (105694,)
+  (303098,)
+  (310125,)
+
+Predicted Records (2 rows):
+  (303098,)
+  (310125,)
+
+--------------------------------------------------------------------------------
+
+Example 21 (Index 155):
+NL Query: i need an early flight from denver to san francisco please and i would like breakfast served on that
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , food_service food_service_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' AND( flight_1.meal_code = food_service_1.meal_code AND food_service_1.meal_description = 'BREAKFAST' AND( flight_1.departure_time >= 0 AND flight_1.departure_time <= 1000 ) ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, food_service food_service_1 WHERE flight_1.departure_time BETWEEN 0 AND 800 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' AND flight_1.meal_code = food_service_1.meal_code AND food_service_1.meal_description = 'BREAKFAST' ) )
+
+Gold Records (4 rows):
+  (108446,)
+  (111065,)
+  (111066,)
+  (111067,)
+
+Predicted Records (1 rows):
+  (111065,)
+
+--------------------------------------------------------------------------------
+
+Example 22 (Index 166):
+NL Query: i need a list of late afternoon flights from chicago to milwaukee
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.departure_time BETWEEN 1600 AND 1800 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'CHICAGO' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'MILWAUKEE' )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.departure_time BETWEEN 1200 AND 1800 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'CHICAGO' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'MILWAUKEE' )
+
+Gold Records (3 rows):
+  (108047,)
+  (108072,)
+  (108073,)
+
+Predicted Records (10 rows):
+  (108045,)
+  (108046,)
+  (108047,)
+  (108067,)
+  (108068,)
+  (108069,)
+  (108070,)
+  (108071,)
+  (108072,)
+  (108073,)
+
+--------------------------------------------------------------------------------
+
+Example 23 (Index 174):
+NL Query: pm flights dallas to atlanta
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ATLANTA' AND( flight_1.departure_time >= 1200 AND flight_1.departure_time <= 2359 ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ATLANTA' AND flight_1.departure_time = 1200 )
+
+Gold Records (13 rows):
+  (100113,)
+  (100114,)
+  (100115,)
+  (100116,)
+  (100117,)
+  (100118,)
+  (100119,)
+  (100120,)
+  (100121,)
+  (100122,)
+  ... (3 more rows)
+
+Predicted Records (1 rows):
+  (100113,)
+
+--------------------------------------------------------------------------------
+
+Example 24 (Index 176):
+NL Query: what flights arrive in chicago on sunday on continental
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , days days_1 , date_day date_day_1 WHERE flight_1.airline_code = 'CO' AND( flight_1.to_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'CHICAGO' AND(( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 8 AND date_day_1.day_number = 27 AND NOT(( flight_1.departure_time > flight_1.arrival_time AND( flight_1.time_elapsed >= 60 OR flight_1.arrival_time < 41 ) AND 1 = 1 ) ) ) OR( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 8 AND date_day_1.day_number = 27 AND( flight_1.departure_time > flight_1.arrival_time AND( flight_1.time_elapsed >= 60 OR flight_1.arrival_time < 41 ) AND 1 = 1 ) ) ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, days days_1, date_day date_day_1 WHERE flight_1.airline_code = 'CO' AND( flight_1.to_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'CHICAGO' AND flight_1.arrival_time = 1200 )
+
+Gold Records (32 rows):
+  (108734,)
+  (108761,)
+  (108770,)
+  (108791,)
+  (108794,)
+  (108798,)
+  (108801,)
+  (108804,)
+  (108880,)
+  (108886,)
+  ... (22 more rows)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 25 (Index 178):
+NL Query: show me the flights from love field to other airports
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport airport_1 , airport airport_2 WHERE flight_1.from_airport = airport_1.airport_code AND airport_1.airport_code = 'DAL' AND flight_1.to_airport = airport_2.airport_code AND 1 = 1
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport airport_1, airport airport_2 WHERE flight_1.from_airport = airport_1.airport_code AND airport_1.airport_code = 'DAL' AND flight_1.to_airport = airport_2.airport_code AND airport_2.airport_code = 'DAL'
+
+Gold Records (41 rows):
+  (104421,)
+  (104422,)
+  (104423,)
+  (104424,)
+  (104425,)
+  (104426,)
+  (104427,)
+  (104428,)
+  (104429,)
+  (104430,)
+  ... (31 more rows)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 26 (Index 179):
+NL Query: show me the flights to and from love field
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport airport_1 , airport airport_2 WHERE flight_1.to_airport = airport_1.airport_code AND airport_1.airport_code = 'DAL' OR flight_1.from_airport = airport_2.airport_code AND airport_2.airport_code = 'DAL'
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport airport_1 WHERE flight_1.from_airport = airport_1.airport_code AND airport_1.airport_code = 'DAL'
+
+Gold Records (86 rows):
+  (102326,)
+  (102327,)
+  (102328,)
+  (102329,)
+  (102330,)
+  (102331,)
+  (102332,)
+  (102333,)
+  (102334,)
+  (102335,)
+  ... (76 more rows)
+
+Predicted Records (41 rows):
+  (104421,)
+  (104422,)
+  (104423,)
+  (104424,)
+  (104425,)
+  (104426,)
+  (104427,)
+  (104428,)
+  (104429,)
+  (104430,)
+  ... (31 more rows)
+
+--------------------------------------------------------------------------------
+
+Example 27 (Index 181):
+NL Query: can you show me one way economy fares from dallas to atlanta
+
+Gold SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1 , fare_basis fare_basis_1 , flight_fare flight_fare_1 , flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE fare_1.round_trip_required = 'NO' AND( fare_1.fare_basis_code = fare_basis_1.fare_basis_code AND fare_basis_1.economy = 'YES' AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ATLANTA' )
+
+Predicted SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1, flight_fare flight_fare_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE fare_1.round_trip_required = 'NO' AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ATLANTA'
+
+Gold Records (2 rows):
+  (7000121,)
+  (7000123,)
+
+Predicted Records (3 rows):
+  (7000117,)
+  (7000121,)
+  (7000123,)
+
+--------------------------------------------------------------------------------
+
+Example 28 (Index 186):
+NL Query: show me all flights from new york to miami leaving on a tuesday and returning on sunday
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 WHERE( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'NEW YORK' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'MIAMI' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = 'TUESDAY' ) ) OR( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'MIAMI' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'NEW YORK' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = 'SUNDAY' ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'NEW YORK' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'MIAMI' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = 'TUESDAY' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = 'TUESDAY' ) )
+
+Gold Records (77 rows):
+  (104262,)
+  (104263,)
+  (104265,)
+  (104267,)
+  (104269,)
+  (104270,)
+  (104272,)
+  (104275,)
+  (104277,)
+  (104278,)
+  ... (67 more rows)
+
+Predicted Records (41 rows):
+  (107743,)
+  (107744,)
+  (107745,)
+  (107747,)
+  (107748,)
+  (107749,)
+  (107752,)
+  (107755,)
+  (107756,)
+  (107757,)
+  ... (31 more rows)
+
+--------------------------------------------------------------------------------
+
+Example 29 (Index 187):
+NL Query: what first class flights are available on july twenty fifth 1991 from denver to baltimore
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 , date_day date_day_1 , flight_fare flight_fare_1 , fare fare_1 , fare_basis fare_basis_1 , fare_basis fare_basis_2 , days days_2 , date_day date_day_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BALTIMORE' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 7 AND date_day_1.day_number = 25 AND flight_1.flight_id = flight_fare_1.flight_id AND flight_fare_1.fare_id = fare_1.fare_id AND fare_1.fare_basis_code = fare_basis_1.fare_basis_code AND fare_basis_1.class_type = 'FIRST' AND fare_1.fare_basis_code = fare_basis_2.fare_basis_code AND fare_basis_2.basis_days = days_2.days_code AND days_2.day_name = date_day_2.day_name AND date_day_2.year = 1991 AND date_day_2.month_number = 7 AND date_day_2.day_number = 25 ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1, date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BALTIMORE' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 7 AND date_day_1.day_number = 25 )
+
+Gold Records (14 rows):
+  (101231,)
+  (101232,)
+  (101233,)
+  (300065,)
+  (300066,)
+  (300067,)
+  (301330,)
+  (302715,)
+  (302716,)
+  (302717,)
+  ... (4 more rows)
+
+Predicted Records (15 rows):
+  (101231,)
+  (101232,)
+  (101233,)
+  (300065,)
+  (300066,)
+  (300067,)
+  (301330,)
+  (302715,)
+  (302716,)
+  (302717,)
+  ... (5 more rows)
+
+--------------------------------------------------------------------------------
+
+Example 30 (Index 209):
+NL Query: american flights to houston from cincinnati
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.airline_code = 'AA' AND( flight_1.to_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'HOUSTON' AND flight_1.from_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'CINCINNATI' )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.airline_code = 'AA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'HOUSTON' AND flight_1.from_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'CINCINNATI' )
+
+Gold Records (3 rows):
+  (300762,)
+  (300763,)
+  (302922,)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 31 (Index 210):
+NL Query: list flights from denver to san francisco no denver to philadelphia
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PHILADELPHIA'
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, flight_stop flight_stop_1, airport_service airport_service_3, city city_3 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' AND flight_1.to_airport = airport_service_3.airport_code AND airport_service_3.city_code = city_3.city_code AND city_3.city_name = 'PHILADELPHIA' )
+
+Gold Records (26 rows):
+  (109510,)
+  (109511,)
+  (109512,)
+  (109513,)
+  (109514,)
+  (109515,)
+  (109516,)
+  (109517,)
+  (109518,)
+  (300539,)
+  ... (16 more rows)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 32 (Index 213):
+NL Query: what is sa
+
+Gold SQL:
+SELECT DISTINCT days_1.day_name FROM days days_1 WHERE days_1.days_code = 'SA'
+
+Predicted SQL:
+SELECT DISTINCT airport_1.airport_code FROM airport airport_1 WHERE airport_1.airport_code = 'SA'
+
+Gold Records (1 rows):
+  ('SATURDAY',)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 33 (Index 215):
+NL Query: give me information on flights from atlanta to washington dc leaving on thursday before 0900
+
+Gold SQL:
+SELECT state_1.state_code FROM state state_1 WHERE state_1.state_code = 'ASD';
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1, date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'WASHINGTON' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 5 AND date_day_1.day_number = 24 )
+
+Gold Records (0 rows):
+  (empty)
+
+Predicted Records (38 rows):
+  (101176,)
+  (101177,)
+  (101178,)
+  (101179,)
+  (101180,)
+  (101181,)
+  (101182,)
+  (101183,)
+  (102371,)
+  (102373,)
+  ... (28 more rows)
+
+--------------------------------------------------------------------------------
+
+Example 34 (Index 219):
+NL Query: tell me about ground transportation between orlando international and orlando
+
+Gold SQL:
+SELECT DISTINCT ground_service_1.transport_type FROM ground_service ground_service_1 , airport airport_1 , city city_1 WHERE ground_service_1.airport_code = airport_1.airport_code AND airport_1.airport_code = 'MCO' AND ground_service_1.city_code = city_1.city_code AND city_1.city_name = 'ORLANDO'
+
+Predicted SQL:
+SELECT DISTINCT ground_service_1.transport_type FROM ground_service ground_service_1, airport airport_1, city city_1 WHERE ground_service_1.airport_code = airport_1.airport_code AND airport_1.airport_code = 'ORLANDO' AND ground_service_1.city_code = city_1.city_code AND city_1.city_name = 'ORLANDO'
+
+Gold Records (3 rows):
+  ('AIR TAXI OPERATION',)
+  ('LIMOUSINE',)
+  ('RENTAL CAR',)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 35 (Index 222):
+NL Query: what flights from atlanta to st. louis on tuesday arriving around 230pm
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 , date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ST. LOUIS' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 3 AND date_day_1.day_number = 22 AND( flight_1.arrival_time >= 1400 AND flight_1.arrival_time <= 1500 ) ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1, date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ST. LOUIS' AND( flight_1.arrival_time >= 1830 AND flight_1.arrival_time = 1430 ) AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 3 AND date_day_1.day_number = 22 ) )
+
+Gold Records (2 rows):
+  (111731,)
+  (111732,)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 36 (Index 238):
+NL Query: i need to reverse the flight from pittsburgh to denver please
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PITTSBURGH'
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DENVER'
+
+Gold Records (8 rows):
+  (110219,)
+  (110220,)
+  (110221,)
+  (110222,)
+  (310990,)
+  (310991,)
+  (310992,)
+  (310993,)
+
+Predicted Records (10 rows):
+  (103019,)
+  (103020,)
+  (103021,)
+  (103022,)
+  (300941,)
+  (309662,)
+  (309663,)
+  (309664,)
+  (309665,)
+  (309666,)
+
+--------------------------------------------------------------------------------
+
+Example 37 (Index 241):
+NL Query: show me the flights from philadelphia to dallas with one stop
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHILADELPHIA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DALLAS' AND flight_1.stops = 1 )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, flight_stop flight_stop_1, airport_service airport_service_3, city city_3 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHILADELPHIA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DALLAS' AND flight_1.flight_id = flight_stop_1.flight_id AND flight_stop_1.stop_airport = airport_service_3.airport_code AND airport_service_3.city_code = city_3.city_code AND city_3.city_name = 'DALLAS' )
+
+Gold Records (7 rows):
+  (103517,)
+  (309766,)
+  (309767,)
+  (309768,)
+  (309769,)
+  (309770,)
+  (309771,)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 38 (Index 258):
+NL Query: could you tell me about flights from philadelphia to dallas that arrives in the early afternoon
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHILADELPHIA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DALLAS' AND( flight_1.arrival_time >= 1200 AND flight_1.arrival_time <= 1400 ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.departure_time BETWEEN 1200 AND 1800 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHILADELPHIA' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DALLAS' )
+
+Gold Records (2 rows):
+  (309767,)
+  (309768,)
+
+Predicted Records (7 rows):
+  (103518,)
+  (309769,)
+  (103519,)
+  (103520,)
+  (309770,)
+  (103521,)
+  (103522,)
+
+--------------------------------------------------------------------------------
+
+Example 39 (Index 263):
+NL Query: what does code y stand for
+
+Gold SQL:
+SELECT DISTINCT fare_basis_1.fare_basis_code FROM fare_basis fare_basis_1 WHERE fare_basis_1.fare_basis_code = 'Y'
+
+Predicted SQL:
+SELECT DISTINCT airline_1.airline_code FROM airline airline_1 WHERE airline_1.airline_code = 'Y'
+
+Gold Records (1 rows):
+  ('Y',)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 40 (Index 269):
+NL Query: show me the flights on delta that go through atlanta
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , flight_stop flight_stop_1 , airport_service airport_service_1 , city city_1 WHERE flight_1.airline_code = 'DL' AND flight_1.flight_id = flight_stop_1.flight_id AND flight_stop_1.stop_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA'
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1 WHERE flight_1.airline_code = 'DL' AND flight_1.to_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA'
+
+Gold Records (788 rows):
+  (101052,)
+  (101351,)
+  (101365,)
+  (101730,)
+  (101797,)
+  (101799,)
+  (101813,)
+  (101949,)
+  (102468,)
+  (102469,)
+  ... (778 more rows)
+
+Predicted Records (279 rows):
+  (100001,)
+  (100002,)
+  (100004,)
+  (100005,)
+  (100006,)
+  (100007,)
+  (100008,)
+  (100010,)
+  (100011,)
+  (100013,)
+  ... (269 more rows)
+
+--------------------------------------------------------------------------------
+
+Example 41 (Index 277):
+NL Query: what are the flights from kansas city to burbank on saturday may twenty two on america west
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 , date_day date_day_1 WHERE flight_1.airline_code = 'HP' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'KANSAS CITY' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BURBANK' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 7 AND date_day_1.day_number = 26 ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1, date_day date_day_1 WHERE flight_1.airline_code = 'AA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'KANSAS CITY' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BURBANK' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 7 AND date_day_1.day_number = 26 ) )
+
+Gold Records (4 rows):
+  (307589,)
+  (307590,)
+  (307591,)
+  (307592,)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 42 (Index 290):
+NL Query: show me the flights to love field from all other airports
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport airport_1 , airport airport_2 WHERE flight_1.from_airport = airport_1.airport_code AND 1 = 1 AND flight_1.to_airport = airport_2.airport_code AND airport_2.airport_code = 'DAL'
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport airport_1 WHERE flight_1.to_airport = airport_1.airport_code AND 1 = 1 AND flight_1.to_airport = airport_1.airport_code AND 1 = 1
+
+Gold Records (45 rows):
+  (102326,)
+  (102327,)
+  (102328,)
+  (102329,)
+  (102330,)
+  (102331,)
+  (102332,)
+  (102333,)
+  (102334,)
+  (102335,)
+  ... (35 more rows)
+
+Predicted Records (23457 rows):
+  (100001,)
+  (100002,)
+  (100003,)
+  (100004,)
+  (100005,)
+  (100006,)
+  (100007,)
+  (100008,)
+  (100009,)
+  (100010,)
+  ... (23447 more rows)
+
+--------------------------------------------------------------------------------
+
+Example 43 (Index 295):
+NL Query: is there ground transportation in dallas from the dallas airport to downtown dallas
+
+Gold SQL:
+SELECT DISTINCT ground_service_1.transport_type FROM ground_service ground_service_1 , airport airport_1 , city city_1 WHERE ground_service_1.airport_code = airport_1.airport_code AND airport_1.airport_code = 'DFW' AND ground_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS'
+
+Predicted SQL:
+SELECT DISTINCT ground_service_1.transport_type FROM ground_service ground_service_1, airport airport_1, city city_1 WHERE ground_service_1.airport_code = airport_1.airport_code AND airport_1.airport_code = 'DALLAS' AND ground_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS'
+
+Gold Records (2 rows):
+  ('LIMOUSINE',)
+  ('RENTAL CAR',)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 44 (Index 296):
+NL Query: list the morning flights at a 124 dollars from atlanta to boston
+
+Gold SQL:
+SELECT state_1.state_code FROM state state_1 WHERE state_1.state_code = 'ASD';
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.departure_time BETWEEN 0 AND 1200 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BOSTON' )
+
+Gold Records (0 rows):
+  (empty)
+
+Predicted Records (9 rows):
+  (100598,)
+  (100599,)
+  (307334,)
+  (304694,)
+  (100600,)
+  (100601,)
+  (100602,)
+  (100603,)
+  (307335,)
+
+--------------------------------------------------------------------------------
+
+Example 45 (Index 300):
+NL Query: how many seats in a 734
+
+Gold SQL:
+SELECT DISTINCT aircraft_1.aircraft_code FROM aircraft aircraft_1 WHERE aircraft_1.aircraft_code = '734'
+
+Predicted SQL:
+SELECT count( DISTINCT ground_service_1.ground_fare ) FROM ground_service ground_service_1 WHERE ground_service_1.airport_code = '734'
+
+Gold Records (1 rows):
+  ('734',)
+
+Predicted Records (1 rows):
+  (0,)
+
+--------------------------------------------------------------------------------
+
+Example 46 (Index 306):
+NL Query: define airline us
+
+Gold SQL:
+SELECT DISTINCT airline_1.airline_code , airline_1.airline_name , airline_1.note FROM airline airline_1 WHERE airline_1.airline_code = 'US'
+
+Predicted SQL:
+SELECT DISTINCT airline_1.airline_code FROM airline airline_1 WHERE airline_1.airline_code = 'US'
+
+Gold Records (1 rows):
+  ('US', 'USAIR', None)
+
+Predicted Records (1 rows):
+  ('US',)
+
+--------------------------------------------------------------------------------
+
+Example 47 (Index 309):
+NL Query: is there any flight leaving washington around 3 o'clock for denver
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'WASHINGTON' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DENVER' AND( flight_1.departure_time >= 1430 AND flight_1.departure_time <= 1530 ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'WASHINGTON' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DENVER' AND( flight_1.departure_time >= 1530 AND flight_1.departure_time = 1530 ) )
+
+Gold Records (1 rows):
+  (102846,)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 48 (Index 310):
+NL Query: show me all flights from orlando to san diego on a boeing 737
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , equipment_sequence equipment_sequence_1 , aircraft aircraft_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ORLANDO' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN DIEGO' AND flight_1.aircraft_code_sequence = equipment_sequence_1.aircraft_code_sequence AND equipment_sequence_1.aircraft_code = aircraft_1.aircraft_code AND aircraft_1.manufacturer = 'BOEING' AND aircraft_1.basic_type = '737' )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, aircraft aircraft_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ORLANDO' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN DIEGO' AND flight_1.flight_number = 737 )
+
+Gold Records (6 rows):
+  (302456,)
+  (302457,)
+  (303717,)
+  (304950,)
+  (305118,)
+  (306875,)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 49 (Index 313):
+NL Query: what are the flights from pittsburgh to denver and back
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DENVER' ) OR( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PITTSBURGH' )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DENVER'
+
+Gold Records (18 rows):
+  (103019,)
+  (103020,)
+  (103021,)
+  (103022,)
+  (110219,)
+  (110220,)
+  (110221,)
+  (110222,)
+  (300941,)
+  (309662,)
+  ... (8 more rows)
+
+Predicted Records (10 rows):
+  (103019,)
+  (103020,)
+  (103021,)
+  (103022,)
+  (300941,)
+  (309662,)
+  (309663,)
+  (309664,)
+  (309665,)
+  (309666,)
+
+--------------------------------------------------------------------------------
+
+Example 50 (Index 326):
+NL Query: show me all flights from chicago to kansas city on thursday june seventeenth arriving in kansas city at around 7 o'clock in the evening
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 , date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'CHICAGO' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'KANSAS CITY' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 5 AND date_day_1.day_number = 24 AND( flight_1.arrival_time >= 1830 AND flight_1.arrival_time <= 1930 ) ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1, date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'CHICAGO' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'KANSAS CITY' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 5 AND date_day_1.day_number = 17 AND( flight_1.arrival_time >= 1830 AND flight_1.arrival_time = 1930 ) ) )
+
+Gold Records (1 rows):
+  (107015,)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 51 (Index 339):
+NL Query: please list all flights from denver to philadelphia two saturdays from now
+
+Gold SQL:
+SELECT state_1.state_code FROM state state_1 WHERE state_1.state_code = 'ASD';
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PHILADELPHIA' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = 'SATURDAY' )
+
+Gold Records (0 rows):
+  (empty)
+
+Predicted Records (22 rows):
+  (109510,)
+  (109511,)
+  (109514,)
+  (109515,)
+  (109516,)
+  (109517,)
+  (300539,)
+  (300540,)
+  (301801,)
+  (301802,)
+  ... (12 more rows)
+
+--------------------------------------------------------------------------------
+
+Example 52 (Index 341):
+NL Query: is there an airport limousine at the atlanta airport
+
+Gold SQL:
+SELECT DISTINCT ground_service_1.transport_type FROM ground_service ground_service_1 , airport airport_1 , airport_service airport_service_1 , city city_1 WHERE ground_service_1.airport_code = airport_1.airport_code AND airport_1.airport_code = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA' AND ground_service_1.transport_type = 'LIMOUSINE'
+
+Predicted SQL:
+SELECT DISTINCT ground_service_1.transport_type FROM ground_service ground_service_1, airport airport_1 WHERE ground_service_1.airport_code = airport_1.airport_code AND airport_1.airport_code = 'ATLANTA' AND ground_service_1.transport_type = 'LIMOUSINE'
+
+Gold Records (1 rows):
+  ('LIMOUSINE',)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 53 (Index 349):
+NL Query: show me which flights from san francisco to pittsburgh on a monday are first class
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 , flight_fare flight_fare_1 , fare fare_1 , fare_basis fare_basis_1 , fare_basis fare_basis_2 , days days_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'SAN FRANCISCO' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PITTSBURGH' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = 'MONDAY' AND flight_1.flight_id = flight_fare_1.flight_id AND flight_fare_1.fare_id = fare_1.fare_id AND fare_1.fare_basis_code = fare_basis_1.fare_basis_code AND fare_basis_1.class_type = 'FIRST' AND fare_1.fare_basis_code = fare_basis_2.fare_basis_code AND fare_basis_2.basis_days = days_2.days_code AND days_2.day_name = 'MONDAY' ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1, date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'SAN FRANCISCO' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PITTSBURGH' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 2 AND date_day_1.day_number = 21 AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 2 AND date_day_1.day_number = 21 ) )
+
+Gold Records (19 rows):
+  (110384,)
+  (110385,)
+  (110386,)
+  (110387,)
+  (110388,)
+  (300574,)
+  (300575,)
+  (300576,)
+  (301878,)
+  (303644,)
+  ... (9 more rows)
+
+Predicted Records (19 rows):
+  (303644,)
+  (306830,)
+  (110384,)
+  (110385,)
+  (110386,)
+  (110387,)
+  (110388,)
+  (300574,)
+  (300575,)
+  (300576,)
+  ... (9 more rows)
+
+--------------------------------------------------------------------------------
+
+Example 54 (Index 361):
+NL Query: how long does it take to get from kansas city to st. paul
+
+Gold SQL:
+SELECT DISTINCT flight_1.time_elapsed FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'KANSAS CITY' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ST. PAUL'
+
+Predicted SQL:
+SELECT DISTINCT flight_1.departure_time FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'KANSAS CITY' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ST. PAUL'
+
+Gold Records (4 rows):
+  (70,)
+  (73,)
+  (75,)
+  (78,)
+
+Predicted Records (7 rows):
+  (725,)
+  (935,)
+  (1050,)
+  (1400,)
+  (1600,)
+  (1710,)
+  (2005,)
+
+--------------------------------------------------------------------------------
+
+Example 55 (Index 392):
+NL Query: from sfo to denver
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport airport_1 , airport_service airport_service_1 , city city_1 WHERE flight_1.from_airport = airport_1.airport_code AND airport_1.airport_code = 'SFO' AND flight_1.to_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER'
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'SFFO' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DENVER'
+
+Gold Records (17 rows):
+  (103048,)
+  (103049,)
+  (103050,)
+  (103051,)
+  (103052,)
+  (103053,)
+  (103054,)
+  (103055,)
+  (103056,)
+  (103057,)
+  ... (7 more rows)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 56 (Index 394):
+NL Query: my question is i want to go to san francisco and i live in denver and i would like to fly on united airlines do you have an early flight
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.airline_code = 'UA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' AND flight_1.departure_time <= 1000 ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.airline_code = 'UA' AND( flight_1.to_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'SAN FRANCISCO' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DENVER' )
+
+Gold Records (3 rows):
+  (108446,)
+  (111065,)
+  (111066,)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+
+Example 57 (Index 399):
+NL Query: show me times for flights from san francisco to atlanta
+
+Gold SQL:
+SELECT DISTINCT flight_1.departure_time , flight_1.arrival_time FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'SAN FRANCISCO' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ATLANTA'
+
+Predicted SQL:
+SELECT DISTINCT flight_1.departure_time FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'SAN FRANCISCO' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ATLANTA'
+
+Gold Records (28 rows):
+  (40, 941)
+  (550, 1435)
+  (635, 1524)
+  (655, 1605)
+  (845, 1733)
+  (942, 1939)
+  (945, 1939)
+  (1200, 2133)
+  (1255, 2148)
+  (1440, 2337)
+  ... (18 more rows)
+
+Predicted Records (28 rows):
+  (40,)
+  (550,)
+  (635,)
+  (655,)
+  (845,)
+  (942,)
+  (945,)
+  (1200,)
+  (1255,)
+  (1440,)
+  ... (18 more rows)
+
+--------------------------------------------------------------------------------
+
+Example 58 (Index 411):
+NL Query: show me the flights from boston to atlanta and the return flights from atlanta to boston
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ATLANTA' ) OR( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BOSTON' )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ATLANTA'
+
+Gold Records (29 rows):
+  (100014,)
+  (100015,)
+  (100016,)
+  (100017,)
+  (100018,)
+  (100019,)
+  (100020,)
+  (100021,)
+  (100598,)
+  (100599,)
+  ... (19 more rows)
+
+Predicted Records (13 rows):
+  (100014,)
+  (100015,)
+  (100016,)
+  (100017,)
+  (100018,)
+  (100019,)
+  (100020,)
+  (100021,)
+  (304692,)
+  (304693,)
+  ... (3 more rows)
+
+--------------------------------------------------------------------------------
+
+Example 59 (Index 426):
+NL Query: is there a continental flight leaving from las vegas to new york nonstop
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.airline_code = 'CO' AND( flight_1.stops = 0 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'LAS VEGAS' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'NEW YORK' ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.stops = 0 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'LAS VEGAS' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'NEW YORK' )
+
+Gold Records (1 rows):
+  (104215,)
+
+Predicted Records (3 rows):
+  (104215,)
+  (105389,)
+  (105392,)
+
+--------------------------------------------------------------------------------
+
+Example 60 (Index 434):
+NL Query: fares and flights from pittsburgh to philadelphia
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , flight_fare flight_fare_1 , fare fare_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PHILADELPHIA' AND flight_1.flight_id = flight_fare_1.flight_id AND flight_fare_1.fare_id = fare_1.fare_id AND 1 = 1
+
+Predicted SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1, flight_fare flight_fare_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PHILADELPHIA'
+
+Gold Records (13 rows):
+  (109694,)
+  (109695,)
+  (109696,)
+  (109697,)
+  (109698,)
+  (109699,)
+  (109700,)
+  (109701,)
+  (109702,)
+  (109703,)
+  ... (3 more rows)
+
+Predicted Records (2 rows):
+  (7021541,)
+  (7021543,)
+
+--------------------------------------------------------------------------------
+
+Example 61 (Index 459):
+NL Query: is there ground transportation from the airport to downtown phoenix
+
+Gold SQL:
+SELECT DISTINCT ground_service_1.transport_type FROM ground_service ground_service_1 , city city_1 , airport airport_1 , airport_service airport_service_1 , city city_2 WHERE ground_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHOENIX' AND ground_service_1.airport_code = airport_1.airport_code AND airport_1.airport_code = airport_service_1.airport_code AND airport_service_1.city_code = city_2.city_code AND city_2.city_name = 'PHOENIX'
+
+Predicted SQL:
+SELECT DISTINCT ground_service_1.transport_type FROM ground_service ground_service_1, airport airport_1, city city_1 WHERE ground_service_1.airport_code = airport_1.airport_code AND airport_1.airport_code = 'PHOENIX'
+
+Gold Records (3 rows):
+  ('AIR TAXI OPERATION',)
+  ('LIMOUSINE',)
+  ('RENTAL CAR',)
+
+Predicted Records (0 rows):
+  (empty)
+
+--------------------------------------------------------------------------------
+

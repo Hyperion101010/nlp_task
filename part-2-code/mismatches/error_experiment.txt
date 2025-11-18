@@ -1,0 +1,797 @@
+================================================================================
+SQL ERRORS - Experiment: experiment
+Model Type: ft
+================================================================================
+
+Total queries: 466
+Queries with SQL errors: 56
+SQL error rate: 12.02%
+
+================================================================================
+ALL QUERIES WITH SQL ERRORS (Failed to execute)
+================================================================================
+
+Example 1 (Index 2):
+NL Query: list all arrivals from any airport to baltimore on thursday morning arriving before 9am
+
+Gold SQL:
+SELECT state_1.state_code FROM state state_1 WHERE state_1.state_code = 'ASD';
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport airport_1, airport_service airport_service_1, city city_1, days days_1, date_day date_day_1 WHERE flight_1.departure_time BETWEEN 0 AND 1200 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BALTIMORE' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 5 AND date_day_1.day_number = 24 AND flight_1.arrival_time  900 ) ) )
+
+Error Message:
+OperationalError: near "900": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 2 (Index 19):
+NL Query: please give me the flight times i would like to fly from boston to baltimore in the morning before 8
+
+Gold SQL:
+SELECT DISTINCT flight_1.departure_time FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BALTIMORE' AND flight_1.departure_time < 800 )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.departure_time, flight_1.arrival_time FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.departure_time BETWEEN 0 AND 1200 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BALTIMORE' AND flight_1.departure_time  800 ) )
+
+Error Message:
+OperationalError: near "800": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 3 (Index 20):
+NL Query: list all flights from boston to san francisco with the maximum number of stops
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' AND flight_1.stops =( SELECT MAX( stops ) FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' AND flight_1.flight_id = flight_stop_1.flight_id AND flight_stop_1.stop_airport = airport_service_3.airport_code AND airport_service_3.city_code = city_3.city_code AND city_3.city_name = 'BOSTON' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' )
+
+Error Message:
+OperationalError: no such column: flight_stop_1.flight_id
+
+--------------------------------------------------------------------------------
+
+Example 4 (Index 23):
+NL Query: what are the flights and prices from la to charlotte for monday morning
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , flight_fare flight_fare_1 , fare fare_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 , date_day date_day_1 , fare_basis fare_basis_1 , days days_2 , date_day date_day_2 WHERE flight_1.departure_time BETWEEN 0 AND 1200 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'LOS ANGELES' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'CHARLOTTE' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 2 AND date_day_1.day_number = 21 ) ) AND flight_1.flight_id = flight_fare_1.flight_id AND flight_fare_1.fare_id = fare_1.fare_id AND fare_1.fare_basis_code = fare_basis_1.fare_basis_code AND fare_basis_1.basis_days = days_2.days_code AND days_2.day_name = date_day_2.day_name AND date_day_2.year = 1991 AND date_day_2.month_number = 2 AND date_day_2.day_number = 21
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, flight_fare flight_fare_1, fare fare_1, fare_basis fare_basis_1, days days_1, date_day date_day_1, flight_fare flight_fare_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_2, date_day date_day_2 WHERE flight_1.departure_time BETWEEN 0 AND 1200 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'LOS ANGELES' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'CHARLOTTE' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 2 AND date_day_1.day_number = 21 ) ) AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'LOS ANGELES' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'CHARLOTTE' AND flight_1.flight_days = days_2.days_code AND days_2.day_name = date_day_2.day_name AND date_day_2.year = 1991 AND date_day_2.month_number = 2 AND date_day_2.day_number = 21 ) )
+
+Error Message:
+OperationalError: ambiguous column name: flight_1.flight_id
+
+--------------------------------------------------------------------------------
+
+Example 5 (Index 24):
+NL Query: i would like information on flights from pittsburgh to baltimore arriving in baltimore before 10am on thursday
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 , date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BALTIMORE' AND( flight_1.arrival_time < 1000 AND(( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 5 AND date_day_1.day_number = 24 AND( flight_1.arrival_time < flight_1.departure_time AND 1 = 1 ) ) OR( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 5 AND date_day_1.day_number = 24 AND NOT(( flight_1.arrival_time < flight_1.departure_time AND 1 = 1 ) ) ) ) ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1, date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BALTIMORE' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 5 AND date_day_1.day_number = 24 AND flight_1.arrival_time  1000 ) )
+
+Error Message:
+OperationalError: near "1000": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 6 (Index 43):
+NL Query: leaving denver flying to san francisco before 10am what type of aircraft is used
+
+Gold SQL:
+SELECT DISTINCT aircraft_1.aircraft_code FROM aircraft aircraft_1 , equipment_sequence equipment_sequence_1 , flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE aircraft_1.aircraft_code = equipment_sequence_1.aircraft_code AND equipment_sequence_1.aircraft_code_sequence = flight_1.aircraft_code_sequence AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' AND flight_1.departure_time < 1000 )
+
+Predicted SQL:
+SELECT DISTINCT aircraft_1.aircraft_code FROM aircraft aircraft_1, equipment_sequence equipment_sequence_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE aircraft_1.aircraft_code = equipment_sequence_1.aircraft_code AND equipment_sequence_1.aircraft_code_sequence = flight_1.aircraft_code_sequence AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' AND flight_1.departure_time  1000 )
+
+Error Message:
+OperationalError: near "1000": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 7 (Index 47):
+NL Query: show me the ground transportation schedule in philadelphia in the morning on wednesday
+
+Gold SQL:
+SELECT DISTINCT ground_service_1.transport_type FROM ground_service ground_service_1 , city city_1 WHERE ground_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHILADELPHIA'
+
+Predicted SQL:
+SELECT DISTINCT ground_service_1.transport_type FROM ground_service ground_service_1, city city_1, days days_1, date_day date_day_1 WHERE ground_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHILADELPHIA' AND ground_service_1.airport_code = airport_1.airport_code AND airport_1.airport_code = airport_1.airport_code AND airport_service_1.city_code = city_2.city_code AND city_2.city_name = 'PHILADELPHIA' AND ground_service_1.city_code = city_2.city_code AND city_2.city_name = 'PHILADELPHIA'
+
+Error Message:
+OperationalError: no such column: airport_1.airport_code
+
+--------------------------------------------------------------------------------
+
+Example 8 (Index 63):
+NL Query: give me the flights from salt lake city to new york city arriving before 6pm
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'SALT LAKE CITY' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'NEW YORK' AND flight_1.arrival_time < 1800 )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'SALT LAKE CITY' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'NEW YORK' AND flight_1.arrival_time  1800 )
+
+Error Message:
+OperationalError: near "1800": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 9 (Index 79):
+NL Query: flights from la guardia or jfk to cleveland
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport airport_1 , airport airport_2 , airport_service airport_service_1 , city city_1 WHERE( flight_1.from_airport = airport_1.airport_code AND airport_1.airport_code = 'JFK' OR flight_1.from_airport = airport_2.airport_code AND airport_2.airport_code = 'LGA' ) AND flight_1.to_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'CLEVELAND'
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport airport_1, airport airport_1, airport airport_2 WHERE flight_1.from_airport = airport_1.airport_code AND airport_1.airport_code = 'LGA' OR flight_1.to_airport = airport_2.airport_code AND airport_2.airport_code = 'JFK'
+
+Error Message:
+OperationalError: ambiguous column name: airport_1.airport_code
+
+--------------------------------------------------------------------------------
+
+Example 10 (Index 87):
+NL Query: i would like to fly from dallas to san francisco on saturday and arrive in san francisco before 4pm
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 , date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' AND( flight_1.arrival_time < 1600 AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 7 AND date_day_1.day_number = 26 ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1, date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 7 AND date_day_1.day_number = 26 AND flight_1.arrival_time  1600 ) )
+
+Error Message:
+OperationalError: near "1600": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 11 (Index 91):
+NL Query: list all flights on continental departing on monday before noon from denver to chicago
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 , date_day date_day_1 WHERE flight_1.airline_code = 'CO' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'CHICAGO' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 2 AND date_day_1.day_number = 21 AND flight_1.departure_time < 1200 ) ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1, date_day date_day_1 WHERE flight_1.airline_code = 'CO' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'CHICAGO' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 2 AND date_day_1.day_number = 21 AND flight_1.departure_time  1200 ) ) )
+
+Error Message:
+OperationalError: near "1200": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 12 (Index 97):
+NL Query: what ground transportation is available from the pittsburgh airport to downtown and how much does it cost
+
+Gold SQL:
+SELECT DISTINCT ground_service_1.transport_type , ground_service_1.ground_fare FROM ground_service ground_service_1 , airport airport_1 , airport_service airport_service_1 , city city_1 , city city_2 WHERE ground_service_1.airport_code = airport_1.airport_code AND airport_1.airport_code = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND ground_service_1.city_code = city_2.city_code AND city_2.city_name = 'PITTSBURGH'
+
+Predicted SQL:
+SELECT DISTINCT ground_service_1.transport_type FROM ground_service ground_service_1, airport airport_1, airport_service airport_service_1, city city_1 WHERE ground_service_1.airport_code = airport_1.airport_code AND airport_1.airport_code = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND ground_service_1.city_code = city_2.city_code AND city_2.city_name = 'PITTSBURGH'
+
+Error Message:
+OperationalError: no such column: city_2.city_code
+
+--------------------------------------------------------------------------------
+
+Example 13 (Index 101):
+NL Query: i'm traveling from boston to atlanta and i'd like to go sometime after 5pm but i want to know what kind of airplane it's on
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , equipment_sequence equipment_sequence_1 , aircraft aircraft_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ATLANTA' AND flight_1.departure_time > 1700 ) AND flight_1.aircraft_code_sequence = equipment_sequence_1.aircraft_code_sequence AND equipment_sequence_1.aircraft_code = aircraft_1.aircraft_code AND 1 = 1
+
+Predicted SQL:
+SELECT DISTINCT aircraft_1.aircraft_code FROM aircraft aircraft_1, equipment_sequence equipment_sequence_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE aircraft_1.aircraft_code = equipment_sequence_1.aircraft_code AND equipment_sequence_1.aircraft_code_sequence = flight_1.aircraft_code_sequence AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ATLANTA' AND flight_1.departure_time > 1700 ) )
+
+Error Message:
+OperationalError: near ")": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 14 (Index 104):
+NL Query: well i'll try last time tell me the kind of aircraft united airlines flies from denver to san francisco before 10 o'clock in the morning
+
+Gold SQL:
+SELECT DISTINCT aircraft_1.aircraft_code FROM aircraft aircraft_1 , equipment_sequence equipment_sequence_1 , flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE aircraft_1.aircraft_code = equipment_sequence_1.aircraft_code AND equipment_sequence_1.aircraft_code_sequence = flight_1.aircraft_code_sequence AND flight_1.airline_code = 'UA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' AND flight_1.departure_time < 1000 ) )
+
+Predicted SQL:
+SELECT DISTINCT aircraft_1.aircraft_code FROM aircraft aircraft_1, equipment_sequence equipment_sequence_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE aircraft_1.aircraft_code = equipment_sequence_1.aircraft_code AND equipment_sequence_1.aircraft_code_sequence = flight_1.aircraft_code_sequence AND flight_1.airline_code = 'UA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' AND flight_1.departure_time  1000 ) )
+
+Error Message:
+OperationalError: near "1000": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 15 (Index 116):
+NL Query: list all nonstop flights from los angeles to pittsburgh which arrive before 5pm on tuesday
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 , date_day date_day_1 WHERE flight_1.stops = 0 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'LOS ANGELES' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PITTSBURGH' AND((( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 3 AND date_day_1.day_number = 22 AND NOT(( flight_1.departure_time > flight_1.arrival_time AND( flight_1.time_elapsed >= 60 OR flight_1.arrival_time < 41 ) AND 1 = 1 ) ) ) OR( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 3 AND date_day_1.day_number = 22 AND( flight_1.departure_time > flight_1.arrival_time AND( flight_1.time_elapsed >= 60 OR flight_1.arrival_time < 41 ) AND 1 = 1 ) ) ) AND flight_1.arrival_time < 1700 ) ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1, date_day date_day_1 WHERE flight_1.stops = 0 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'LOS ANGELES' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PITTSBURGH' AND( flight_1.arrival_time  1700 AND( flight_1.arrival_time  flight_1.arrival_time AND( flight_1.time_elapsed >= 60 OR flight_1.arrival_time  41 ) AND 1 = 1 ) ) OR( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 3 AND date_day_1.day_number = 22 AND not(( flight_1.departure_time > flight_1.arrival_time AND( flight_1.time_elapsed >= 60 OR flight_1.arrival_time  41 ) AND 1 = 1 ) ) OR( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 3 AND date_day_1.day_number = 22 AND not(( flight_1.departure_time > flight_1.arrival_time AND( flight_1.time_elapsed >= 60 OR flight_1.arrival_time  41 ) AND 1 = 1 ) ) ) ) ) ) ) ) ) ) ) ) )
+
+Error Message:
+OperationalError: near "1700": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 16 (Index 121):
+NL Query: what ground transportation is available from the pittsburgh airport to the town
+
+Gold SQL:
+SELECT DISTINCT ground_service_1.transport_type FROM ground_service ground_service_1 , airport airport_1 , airport_service airport_service_1 , city city_1 , city city_2 WHERE ground_service_1.airport_code = airport_1.airport_code AND airport_1.airport_code = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND ground_service_1.city_code = city_2.city_code AND city_2.city_name = 'PITTSBURGH'
+
+Predicted SQL:
+SELECT DISTINCT ground_service_1.transport_type FROM ground_service ground_service_1, airport airport_1, airport_service airport_service_1, city city_1 WHERE ground_service_1.airport_code = airport_1.airport_code AND airport_1.airport_code = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND ground_service_1.city_code = city_2.city_code AND city_2.city_name = 'PITTSBURGH'
+
+Error Message:
+OperationalError: no such column: city_2.city_code
+
+--------------------------------------------------------------------------------
+
+Example 17 (Index 129):
+NL Query: from las vegas to new york a nonstop twa and fare
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , flight_fare flight_fare_1 , fare fare_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.airline_code = 'TW' AND( flight_1.stops = 0 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'LAS VEGAS' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'NEW YORK' ) ) AND flight_1.flight_id = flight_fare_1.flight_id AND flight_fare_1.fare_id = fare_1.fare_id AND 1 = 1
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, flight_fare flight_fare_1, fare fare_1 WHERE flight_1.stops = 0 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'LAS VEGAS' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'NEW YORK' AND flight_1.flight_id = flight_fare_1.flight_id AND flight_fare_1.fare_id = fare_1.fare_id AND 1 = 1 ) ) )
+
+Error Message:
+OperationalError: near ")": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 18 (Index 132):
+NL Query: could you please find me a nonstop flight from atlanta to baltimore on a boeing 757 arriving at 7pm
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , equipment_sequence equipment_sequence_1 , aircraft aircraft_1 WHERE flight_1.stops = 0 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BALTIMORE' AND(( flight_1.arrival_time >= 1830 AND flight_1.arrival_time <= 1930 ) AND flight_1.aircraft_code_sequence = equipment_sequence_1.aircraft_code_sequence AND equipment_sequence_1.aircraft_code = aircraft_1.aircraft_code AND aircraft_1.manufacturer = 'BOEING' AND aircraft_1.basic_type = '757' ) ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, equipment_sequence equipment_sequence_1, aircraft aircraft_1 WHERE flight_1.stops = 0 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BALTIMORE' AND( flight_1.arrival_time = 1900 AND flight_1.arrival_time = 1900 ) ) ) )
+
+Error Message:
+OperationalError: near ")": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 19 (Index 138):
+NL Query: all flights and fares from pittsburgh to dallas round trip after 12pm less than 1100 dollars
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , flight_fare flight_fare_1 , fare fare_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , flight_fare flight_fare_2 , fare fare_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DALLAS' AND( flight_1.flight_id = flight_fare_2.flight_id AND flight_fare_2.fare_id = fare_2.fare_id AND fare_2.round_trip_cost < 1100 AND flight_1.departure_time > 1200 ) ) AND flight_1.flight_id = flight_fare_1.flight_id AND flight_fare_1.fare_id = fare_1.fare_id AND fare_1.round_trip_cost < 1100
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, flight_fare flight_fare_1, fare fare_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, flight_fare flight_fare_1, fare fare_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DALLAS' AND( flight_1.flight_id = flight_fare_1.flight_id AND flight_fare_1.fare_id = fare_1.fare_id AND fare_1.round_trip_cost  1100 AND flight_1.departure_time > 1200 ) ) AND flight_1.flight_id = flight_fare_1.flight_id AND flight_fare_1.fare_id = fare_1.fare_id AND fare_1.round_trip_cost  1100
+
+Error Message:
+OperationalError: near "1100": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 20 (Index 140):
+NL Query: i need a cheap flight from baltimore to san francisco
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , flight_fare flight_fare_1 , fare fare_1 , fare_basis fare_basis_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BALTIMORE' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' AND flight_1.flight_id = flight_fare_1.flight_id AND flight_fare_1.fare_id = fare_1.fare_id AND fare_1.fare_basis_code = fare_basis_1.fare_basis_code AND NOT( fare_basis_1.booking_class = 'Y' ) AND fare_basis_1.economy = 'YES' )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.flight_id = flight_fare_1.flight_id AND flight_fare_1.fare_id = fare_1.fare_id AND fare_1.one_direction_cost =( SELECT MIN( fare_1.one_direction_cost ) FROM fare fare_1, flight_fare flight_fare_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BALTIMORE' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' ) AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BALTIMORE' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' )
+
+Error Message:
+OperationalError: no such column: flight_fare_1.flight_id
+
+--------------------------------------------------------------------------------
+
+Example 21 (Index 146):
+NL Query: what are the different classes that an airline offers
+
+Gold SQL:
+SELECT DISTINCT class_of_service_1.booking_class FROM class_of_service class_of_service_1 WHERE 1 = 1
+
+Predicted SQL:
+SELECT DISTINCT class_of_service_1.booking_class FROM class_of_service class_of_service_1 WHERE class_of_service_1.booking_class =( SELECT MIN( class_of_service_1.booking_class ) FROM class_of_service class_of_service_1 WHERE class_of_service_1.booking_class =( SELECT MIN( class_of_service_1.booking_class SELECT DISTINCT flight_1.airline_code AND flight_1.airline_code = airline_1.airline_code AND 1 = 1
+
+Error Message:
+OperationalError: near "SELECT": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 22 (Index 156):
+NL Query: what round trip tickets are there from cleveland to miami on us air that arrive before 4pm
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , flight_fare flight_fare_1 , fare fare_1 WHERE flight_1.airline_code = 'US' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'CLEVELAND' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'MIAMI' AND( flight_1.arrival_time < 1600 AND flight_1.flight_id = flight_fare_1.flight_id AND flight_fare_1.fare_id = fare_1.fare_id AND fare_1.round_trip_cost IS NOT NULL AND 1 = 1 ) ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, flight_fare flight_fare_1, fare fare_1 WHERE flight_1.airline_code = 'US' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'CLEVELAND' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'MIAMI' AND( flight_1.arrival_time  1600 AND flight_1.arrival_time  1600 ) ) ) )
+
+Error Message:
+OperationalError: near "1600": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 23 (Index 157):
+NL Query: what are the classes of service on lufthansa
+
+Gold SQL:
+SELECT DISTINCT class_of_service_1.booking_class FROM class_of_service class_of_service_1 , fare_basis fare_basis_1 , fare fare_1 , flight_fare flight_fare_1 , flight flight_1 WHERE class_of_service_1.booking_class = fare_basis_1.booking_class AND fare_basis_1.fare_basis_code = fare_1.fare_basis_code AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.airline_code = 'LH' AND 1 = 1
+
+Predicted SQL:
+SELECT DISTINCT class_of_service_1.booking_class FROM class_of_service class_of_service_1, fare_basis fare_basis_1 WHERE class_of_service_1.booking_class = fare_basis_1.booking_class AND fare_basis_1.fare_basis_code = fare_basis_1.booking_class AND fare_basis_1.fare_basis_code = fare_basis_1.fare_basis_code AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.airline_code = 'AA' AND 1 = 1
+
+Error Message:
+OperationalError: no such column: fare_1.fare_id
+
+--------------------------------------------------------------------------------
+
+Example 24 (Index 159):
+NL Query: does flight ua 270 from denver to philadelphia have a meal
+
+Gold SQL:
+SELECT DISTINCT food_service_1.meal_code , food_service_1.meal_number , food_service_1.compartment FROM food_service food_service_1 , flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE food_service_1.meal_code = flight_1.meal_code AND flight_1.airline_code = 'UA' AND( flight_1.flight_number = 270 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PHILADELPHIA' ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, food_service food_service_1 WHERE flight_1.airline_code = 'UA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PHILADELPHIA' AND flight_1.meal_code = food_service_1.meal_code AND 1 = 1 ) ) )
+
+Error Message:
+OperationalError: near ")": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 25 (Index 164):
+NL Query: all flights and fares from atlanta to dallas round trip after 12pm less than 1100 dollars
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , flight_fare flight_fare_1 , fare fare_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , flight_fare flight_fare_2 , fare fare_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DALLAS' AND( flight_1.flight_id = flight_fare_2.flight_id AND flight_fare_2.fare_id = fare_2.fare_id AND fare_2.round_trip_cost < 1100 AND flight_1.departure_time > 1200 ) ) AND flight_1.flight_id = flight_fare_1.flight_id AND flight_fare_1.fare_id = fare_1.fare_id AND fare_1.round_trip_cost < 1100
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, flight_fare flight_fare_1, fare fare_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, flight_fare flight_fare_1, fare fare_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DALLAS' AND flight_1.flight_id = flight_fare_1.flight_id AND flight_fare_1.fare_id = fare_1.fare_id AND fare_1.round_trip_cost  1100 AND flight_1.flight_id = flight_fare_1.flight_id AND flight_fare_1.fare_id = fare_1.fare_id AND fare_1.round_trip_cost  1100
+
+Error Message:
+OperationalError: near "1100": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 26 (Index 168):
+NL Query: what flights leave philadelphia for dallas and depart before noon on american airlines
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.airline_code = 'AA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHILADELPHIA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DALLAS' AND flight_1.departure_time < 1200 ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.airline_code = 'AA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHILADELPHIA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DALLAS' AND flight_1.departure_time  1200 ) )
+
+Error Message:
+OperationalError: near "1200": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 27 (Index 169):
+NL Query: what is the fare on american airlines flight 928 from dallas fort worth to boston
+
+Gold SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1 , flight_fare flight_fare_1 , flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , airport_service airport_service_3 , city city_3 WHERE fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.airline_code = 'AA' AND(( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS' AND flight_1.from_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'FORT WORTH' ) AND( flight_1.to_airport = airport_service_3.airport_code AND airport_service_3.city_code = city_3.city_code AND city_3.city_name = 'BOSTON' AND flight_1.flight_number = 928 ) )
+
+Predicted SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1, flight_fare flight_fare_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, airport_service airport_service_3, city city_3 WHERE fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.airline_code = 'AA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS' AND flight_1.from_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'FORT WORTH' ) AND( flight_1.to_airport = airport_service_3.airport_code AND airport_service_3.city_code = city_3.city_code AND city_3.city_name = 'BOSTON' AND flight_1.flight_number = 928 ) )
+
+Error Message:
+OperationalError: near ")": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 28 (Index 170):
+NL Query: how far from the airport in the dallas fort worth airport is dallas
+
+Gold SQL:
+SELECT DISTINCT airport_service_1.miles_distant FROM airport_service airport_service_1 , city city_1 , airport airport_1 WHERE airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS' AND airport_service_1.airport_code = airport_1.airport_code AND airport_1.airport_code = 'DFW'
+
+Predicted SQL:
+SELECT DISTINCT airport_service_1.miles_distant FROM airport_service airport_service_1, airport airport_1, airport_service airport_service_1, city city_1 WHERE airport_service_1.airport_code = airport_1.airport_code AND airport_1.airport_code = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS'
+
+Error Message:
+OperationalError: ambiguous column name: airport_service_1.miles_distant
+
+--------------------------------------------------------------------------------
+
+Example 29 (Index 189):
+NL Query: what's the lowest round trip fare from atlanta to bwi
+
+Gold SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1 , flight_fare flight_fare_1 , flight flight_1 , airport_service airport_service_1 , city city_1 , airport airport_1 WHERE fare_1.round_trip_cost =( SELECT MIN( fare_1.round_trip_cost ) FROM fare fare_1 , flight_fare flight_fare_1 , flight flight_1 , airport_service airport_service_1 , city city_1 , airport airport_1 WHERE fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA' AND flight_1.to_airport = airport_1.airport_code AND airport_1.airport_code = 'BWI' ) AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA' AND flight_1.to_airport = airport_1.airport_code AND airport_1.airport_code = 'BWI'
+
+Predicted SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1, flight_fare flight_fare_1, flight flight_1, airport_service airport_service_1, city city_1, airport airport_1 WHERE fare_1.round_trip_cost =( SELECT MIN( fare_1.round_trip_cost ) FROM fare fare_1, airport airport_1, airport airport_1, airport_service airport_service_2, city city_2 WHERE fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA' AND flight_1.to_airport = airport_1.airport_code AND airport_1.airport_code = 'BWI' ) AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA' AND flight_1.to_airport = airport_1.airport_code AND airport_1.airport_code = 'BWI'
+
+Error Message:
+OperationalError: ambiguous column name: airport_1.airport_code
+
+--------------------------------------------------------------------------------
+
+Example 30 (Index 200):
+NL Query: show me flights from tampa to st. louis leaving before 10am
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'TAMPA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ST. LOUIS' AND flight_1.departure_time < 1000 )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'TAMPA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ST. LOUIS' AND flight_1.departure_time  1000 )
+
+Error Message:
+OperationalError: near "1000": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 31 (Index 204):
+NL Query: show me the cities served by canadian airlines international
+
+Gold SQL:
+SELECT DISTINCT city_1.city_code FROM city city_1 , airport_service airport_service_1 , airport airport_1 , flight flight_1 WHERE city_1.city_code = airport_service_1.city_code AND airport_service_1.airport_code = airport_1.airport_code AND airport_1.airport_code = flight_1.to_airport AND flight_1.airline_code = 'CP' AND 1 = 1
+
+Predicted SQL:
+SELECT DISTINCT city_1.city_code FROM city city_1, airport_service airport_service_1, airport airport_1 WHERE city_1.city_code = airport_1.city_code AND airport_1.airport_code = airport_service_1.city_code AND airport_service_1.airport_code = airport_1.airport_code AND airport_1.airport_code = airport_1.airport_code AND airport_1.airport_code = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'KANSAS'
+
+Error Message:
+OperationalError: no such column: airport_1.city_code
+
+--------------------------------------------------------------------------------
+
+Example 32 (Index 214):
+NL Query: show me the united flights from bwi to denver
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport airport_1 , airport_service airport_service_1 , city city_1 WHERE flight_1.airline_code = 'UA' AND( flight_1.from_airport = airport_1.airport_code AND airport_1.airport_code = 'BWI' AND flight_1.to_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport airport_1, airport_service airport_service_1, city city_1, airport airport_1 WHERE flight_1.airline_code = 'UA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BWI' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DENVER' )
+
+Error Message:
+OperationalError: no such column: airport_service_2.airport_code
+
+--------------------------------------------------------------------------------
+
+Example 33 (Index 226):
+NL Query: on the 8am flight from san francisco to atlanta what type of aircraft is used
+
+Gold SQL:
+SELECT DISTINCT aircraft_1.aircraft_code FROM aircraft aircraft_1 , equipment_sequence equipment_sequence_1 , flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE aircraft_1.aircraft_code = equipment_sequence_1.aircraft_code AND equipment_sequence_1.aircraft_code_sequence = flight_1.aircraft_code_sequence AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'SAN FRANCISCO' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ATLANTA' AND flight_1.departure_time = 800 )
+
+Predicted SQL:
+SELECT DISTINCT aircraft_1.aircraft_code FROM aircraft aircraft_1, equipment_sequence equipment_sequence_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE aircraft_1.aircraft_code = equipment_sequence_1.aircraft_code AND equipment_sequence_1.aircraft_code_sequence = flight_1.aircraft_code_sequence AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'SAN FRANCISCO' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ATLANTA' AND flight_1.departure_time = 800 ) )
+
+Error Message:
+OperationalError: near ")": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 34 (Index 229):
+NL Query: i'd like to find a nonstop flight from boston to atlanta that leaves sometime in the afternoon and arrives in atlanta before evening
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.stops = 0 AND( flight_1.departure_time BETWEEN 1200 AND 1800 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ATLANTA' AND flight_1.arrival_time < 1800 ) ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.stops = 0 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ATLANTA' AND( flight_1.arrival_time = 1800 AND flight_1.arrival_time = 1800 ) ) ) )
+
+Error Message:
+OperationalError: near ")": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 35 (Index 249):
+NL Query: what are the fares for flights serving a meal from boston to pittsburgh before noon on thursday
+
+Gold SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1 , fare_basis fare_basis_1 , days days_1 , date_day date_day_1 , flight_fare flight_fare_1 , flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , food_service food_service_1 , days days_2 , date_day date_day_2 WHERE fare_1.fare_basis_code = fare_basis_1.fare_basis_code AND fare_basis_1.basis_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 5 AND date_day_1.day_number = 24 AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PITTSBURGH' AND( flight_1.meal_code = food_service_1.meal_code AND 1 = 1 AND( flight_1.flight_days = days_2.days_code AND days_2.day_name = date_day_2.day_name AND date_day_2.year = 1991 AND date_day_2.month_number = 5 AND date_day_2.day_number = 24 AND flight_1.departure_time < 1200 ) ) )
+
+Predicted SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1, fare_basis fare_basis_1, days days_1, date_day date_day_1, flight_fare flight_fare_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_2, date_day date_day_2 WHERE fare_1.fare_basis_code = fare_basis_1.fare_basis_code AND fare_basis_1.basis_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 5 AND date_day_1.day_number = 24 AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PITTSBURGH' AND( flight_1.flight_days = days_2.days_code AND days_2.day_name = date_day_2.day_name AND date_day_2.year = 1991 AND date_day_2.month_number = 5 AND date_day_2.day_number = 24 AND flight_1.meal_code = fare_basis_2.meal_code AND fare_basis_2.basis_days = days_2.days_code AND days_2.day_name = date_day_2.day_name AND date_day_2.year = 1991 AND date_day_2.month_number = 5 AND date_day_
+
+Error Message:
+OperationalError: incomplete input
+
+--------------------------------------------------------------------------------
+
+Example 36 (Index 252):
+NL Query: please give me the flight times the morning on united airlines for september twentieth from philadelphia to san francisco
+
+Gold SQL:
+SELECT DISTINCT flight_1.departure_time FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 , date_day date_day_1 WHERE flight_1.airline_code = 'UA' AND( flight_1.departure_time BETWEEN 0 AND 1200 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHILADELPHIA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 9 AND date_day_1.day_number = 20 ) ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.departure_time FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1, date_day date_day_1 WHERE flight_1.departure_time BETWEEN 0 AND 1200 AND( flight_1.airline_code = 'UA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHILADELPHIA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'SAN FRANCISCO' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 9 AND date_day_1.day_number = 20 ) )
+
+Error Message:
+OperationalError: incomplete input
+
+--------------------------------------------------------------------------------
+
+Example 37 (Index 262):
+NL Query: show me the continental flights leaving chicago early saturday morning
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , days days_1 , date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'CHICAGO' AND(( flight_1.departure_time BETWEEN 0 AND 800 AND 1 = 1 ) AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 7 AND date_day_1.day_number = 26 AND( flight_1.airline_code = 'CO' AND 1 = 1 ) ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, days days_1, date_day date_day_1 WHERE flight_1.departure_time BETWEEN 0 AND 800 AND( flight_1.airline_code = 'CO' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'CHICAGO' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 7 AND date_day_1.day_number = 26 AND( flight_1.departure_time BETWEEN 0 AND 1200 AND 1 = 1 ) ) ) ) ) ) )
+
+Error Message:
+OperationalError: near ")": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 38 (Index 281):
+NL Query: how many first class flights does united have leaving from all cities today
+
+Gold SQL:
+SELECT count( DISTINCT flight_1.flight_id ) FROM flight flight_1 , airport_service airport_service_1 , city city_1 , days days_1 , date_day date_day_1 , flight_fare flight_fare_1 , fare fare_1 , fare_basis fare_basis_1 , fare_basis fare_basis_2 , days days_2 , date_day date_day_2 WHERE flight_1.airline_code = 'UA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND 1 = 1 AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 4 AND date_day_1.day_number = 29 AND flight_1.flight_id = flight_fare_1.flight_id AND flight_fare_1.fare_id = fare_1.fare_id AND fare_1.fare_basis_code = fare_basis_1.fare_basis_code AND fare_basis_1.class_type = 'FIRST' AND fare_1.fare_basis_code = fare_basis_2.fare_basis_code AND fare_basis_2.basis_days = days_2.days_code AND days_2.day_name = date_day_2.day_name AND date_day_2.year = 1991 AND date_day_2.month_number = 4 AND date_day_2.day_number = 29 ) )
+
+Predicted SQL:
+SELECT count( DISTINCT flight_1.flight_id ) FROM flight flight_1, days days_1, date_day date_day_1, flight_fare flight_fare_1, fare fare_1, fare_basis fare_basis_1, fare_basis fare_basis_2, days days_2, date_day date_day_2 WHERE flight_1.airline_code = 'UA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'FIRST' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 4 AND date_day_1.day_number = 29 AND flight_1.flight_id = flight_fare_1.flight_id AND flight_fare_1.fare_id = fare_1.fare_id AND fare_1.fare_basis_code = fare_basis_1.fare_basis_code AND fare_basis_1.class_type = 'FIRST' AND fare_1.fare_basis_code = fare_basis_2.fare_basis_code AND fare_basis_2.basis_days = days_2.days_code AND days_2.day_name = date_day_2.day_name AND date_day_2.year = 1991 AND date_day_2.month_number = 4 AND date_day_2.day_number = 29 ) )
+
+Error Message:
+OperationalError: no such column: airport_service_1.airport_code
+
+--------------------------------------------------------------------------------
+
+Example 39 (Index 297):
+NL Query: thank you for that information now i would like to book a flight from philadelphia to boston on the night of april sixteen around 9 o'clock
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 , date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHILADELPHIA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BOSTON' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 4 AND date_day_1.day_number = 16 AND( flight_1.departure_time >= 2030 AND flight_1.departure_time <= 2130 ) ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1, date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PHILADELPHIA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'BOSTON' AND( flight_1.departure_time >= 2130 AND flight_1.departure_time = 2130 ) AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 4 AND date_day_1.day_number = 16 ) )
+
+Error Message:
+OperationalError: near ")": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 40 (Index 304):
+NL Query: is twa flight 497766 from st. petersburg to milwaukee with one stop available tomorrow morning
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , flight_leg flight_leg_1 , flight flight_2 , flight_leg flight_leg_2 , flight flight_3 , days days_1 , date_day date_day_1 WHERE flight_1.departure_time BETWEEN 0 AND 1200 AND( flight_1.airline_code = 'TW' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ST. PETERSBURG' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'MILWAUKEE' AND( flight_1.stops = 1 AND( flight_1.flight_id = flight_leg_1.flight_id AND flight_leg_1.leg_flight = flight_2.flight_id AND flight_2.flight_number = 497 AND( flight_1.flight_id = flight_leg_2.flight_id AND flight_leg_2.leg_flight = flight_3.flight_id AND flight_3.flight_number = 766 AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 1 AND date_day_1.day_number = 20 ) ) ) ) ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, flight_stop flight_stop_1, airport_service airport_service_3, city city_3, days days_1, date_day date_day_1 WHERE flight_1.airline_code = 'TW' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ST. PETERSBURG' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'MILWAUKEE' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 1 AND date_day_1.day_number = 20 AND flight_1.flight_id = flight_stop_1.flight_id AND flight_stop_1.stop_airport = airport_service_3.airport_code AND airport_service_3.city_code = city_3.city_code AND city_3.city_name = 'ST. PETERSBURG' AND( flight_1.to_airport = airport_service_3.airport_code AND airport_service_3.city_code = city_3.city_code AND city_2.city_name = 'MILWAUKEE' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 1 AND date_day_1.day_number = 20 ) )
+
+Error Message:
+OperationalError: incomplete input
+
+--------------------------------------------------------------------------------
+
+Example 41 (Index 315):
+NL Query: what flights leave denver before noon on northwest airlines
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 WHERE flight_1.airline_code = 'NW' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND flight_1.departure_time < 1200 )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1 WHERE flight_1.airline_code = 'NW' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND flight_1.departure_time  1200 )
+
+Error Message:
+OperationalError: near "1200": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 42 (Index 321):
+NL Query: could you please give me the cost of a round trip flight from denver to pittsburgh
+
+Gold SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1 , flight_fare flight_fare_1 , flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE fare_1.round_trip_cost IS NOT NULL AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PITTSBURGH'
+
+Predicted SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1, flight_fare flight_fare_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, flight_fare flight_fare_1, fare fare_1 WHERE fare_1.round_trip_cost IS NOT NULL AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PITTSBURGH'
+
+Error Message:
+OperationalError: ambiguous column name: fare_1.fare_id
+
+--------------------------------------------------------------------------------
+
+Example 43 (Index 325):
+NL Query: i would like an afternoon flight from denver colorado to dallas texas
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , state state_1 , airport_service airport_service_2 , city city_2 , state state_2 WHERE flight_1.departure_time BETWEEN 1200 AND 1800 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND city_1.state_code = state_1.state_code AND state_1.state_name = 'COLORADO' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DALLAS' AND city_2.state_code = state_2.state_code AND state_2.state_name = 'TEXAS' )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, state state_1 WHERE flight_1.departure_time BETWEEN 1200 AND 1800 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DENVER' AND city_1.state_code = state_1.state_code AND state_1.state_name = 'COLORADO' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DALLAS' ) )
+
+Error Message:
+OperationalError: near ")": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 44 (Index 338):
+NL Query: list nonstop flights from baltimore to newark on wednesday before noon
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 , date_day date_day_1 WHERE flight_1.stops = 0 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BALTIMORE' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'NEWARK' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 4 AND date_day_1.day_number = 23 AND flight_1.departure_time < 1200 ) ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1, date_day date_day_1 WHERE flight_1.stops = 0 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BALTIMORE' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'NEWARK' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 4 AND date_day_1.day_number = 23 AND flight_1.departure_time  1200 ) ) )
+
+Error Message:
+OperationalError: near "1200": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 45 (Index 352):
+NL Query: give me the flights on december twenty seventh with the fares from indianapolis to orlando
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , flight_fare flight_fare_1 , fare fare_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 , date_day date_day_1 , fare_basis fare_basis_1 , days days_2 , date_day date_day_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'INDIANAPOLIS' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ORLANDO' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 12 AND date_day_1.day_number = 27 ) AND flight_1.flight_id = flight_fare_1.flight_id AND flight_fare_1.fare_id = fare_1.fare_id AND fare_1.fare_basis_code = fare_basis_1.fare_basis_code AND fare_basis_1.basis_days = days_2.days_code AND days_2.day_name = date_day_2.day_name AND date_day_2.year = 1991 AND date_day_2.month_number = 12 AND date_day_2.day_number = 27
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, flight_fare flight_fare_1, fare fare_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1, date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'INDIANAPOLIS' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ORLANDO' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 12 AND date_day_1.day_number = 27 )
+
+Error Message:
+Query timed out
+
+--------------------------------------------------------------------------------
+
+Example 46 (Index 367):
+NL Query: what classes of service does twa have
+
+Gold SQL:
+SELECT DISTINCT class_of_service_1.booking_class FROM class_of_service class_of_service_1 , fare_basis fare_basis_1 , fare fare_1 , flight_fare flight_fare_1 , flight flight_1 WHERE class_of_service_1.booking_class = fare_basis_1.booking_class AND fare_basis_1.fare_basis_code = fare_1.fare_basis_code AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.airline_code = 'TW' AND 1 = 1
+
+Predicted SQL:
+SELECT DISTINCT class_of_service_1.booking_class FROM class_of_service class_of_service_1, fare_basis fare_basis_1 WHERE class_of_service_1.booking_class = fare_basis_1.booking_class AND fare_basis_1.fare_basis_code = fare_basis_1.booking_class AND fare_basis_1.fare_basis_code = fare_basis_1.fare_basis_code AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.airline_code = 'TW'
+
+Error Message:
+OperationalError: no such column: fare_1.fare_id
+
+--------------------------------------------------------------------------------
+
+Example 47 (Index 384):
+NL Query: i'm looking for flights from pittsburgh to philadelphia leaving before 9am
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PHILADELPHIA' ) AND flight_1.departure_time < 900
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PHILADELPHIA' AND flight_1.departure_time  900 )
+
+Error Message:
+OperationalError: near "900": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 48 (Index 387):
+NL Query: show me all the flights out of boston today
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , days days_1 , date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 6 AND date_day_1.day_number = 13
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, days days_1, date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 4 AND date_day_1.day_number = 29 )
+
+Error Message:
+OperationalError: near ")": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 49 (Index 391):
+NL Query: show me all fares from new york to miami leaving on a tuesday
+
+Gold SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1 , fare_basis fare_basis_1 , days days_1 , flight_fare flight_fare_1 , flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_2 WHERE fare_1.fare_basis_code = fare_basis_1.fare_basis_code AND fare_basis_1.basis_days = days_1.days_code AND days_1.day_name = 'TUESDAY' AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'NEW YORK' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'MIAMI' AND flight_1.flight_days = days_2.days_code AND days_2.day_name = 'TUESDAY' )
+
+Predicted SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1, fare_basis fare_basis_1, days days_1, date_day date_day_1, flight_fare flight_fare_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_2 WHERE fare_1.fare_basis_code = fare_basis_1.fare_basis_code AND fare_basis_1.basis_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 3 AND date_day_1.day_number = 22 AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'NEW YORK' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'MIAMI' AND flight_1.flight_days = days_2.days_code AND days_2.day_name = date_day_2.day_name AND date_day_2.year = 1991 AND date_day_2.month_number = 3 AND date_day_2.day_number = 22 )
+
+Error Message:
+OperationalError: no such column: date_day_2.day_name
+
+--------------------------------------------------------------------------------
+
+Example 50 (Index 403):
+NL Query: what type of aircraft does eastern fly from atlanta to denver before 6pm
+
+Gold SQL:
+SELECT DISTINCT aircraft_1.aircraft_code FROM aircraft aircraft_1 , equipment_sequence equipment_sequence_1 , flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE aircraft_1.aircraft_code = equipment_sequence_1.aircraft_code AND equipment_sequence_1.aircraft_code_sequence = flight_1.aircraft_code_sequence AND flight_1.airline_code = 'EA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DENVER' AND flight_1.departure_time < 1800 ) )
+
+Predicted SQL:
+SELECT DISTINCT aircraft_1.aircraft_code FROM aircraft aircraft_1, equipment_sequence equipment_sequence_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE aircraft_1.aircraft_code = equipment_sequence_1.aircraft_code AND equipment_sequence_1.aircraft_code_sequence = flight_1.aircraft_code_sequence AND flight_1.airline_code = 'EA' AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'ATLANTA' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'DENVER' AND flight_1.departure_time  1800 ) )
+
+Error Message:
+OperationalError: near "1800": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 51 (Index 406):
+NL Query: show me all first class fares from new york to miami leaving on a tuesday
+
+Gold SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1 , fare_basis fare_basis_1 , fare_basis fare_basis_2 , days days_1 , flight_fare flight_fare_1 , flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_2 WHERE fare_1.fare_basis_code = fare_basis_1.fare_basis_code AND fare_basis_1.class_type = 'FIRST' AND( fare_1.fare_basis_code = fare_basis_2.fare_basis_code AND fare_basis_2.basis_days = days_1.days_code AND days_1.day_name = 'TUESDAY' AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_id = flight_1.flight_id AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'NEW YORK' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'MIAMI' AND flight_1.flight_days = days_2.days_code AND days_2.day_name = 'TUESDAY' ) )
+
+Predicted SQL:
+SELECT DISTINCT fare_1.fare_id FROM fare fare_1, fare_basis fare_basis_1, days days_1, date_day date_day_1, flight_fare flight_fare_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE fare_1.fare_basis_code = fare_basis_1.fare_basis_code AND fare_basis_1.class_type = 'FIRST' AND fare_1.fare_id = flight_fare_1.fare_id AND flight_fare_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 3 AND date_day_1.day_number = 22 )
+
+Error Message:
+OperationalError: near ")": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 52 (Index 416):
+NL Query: all flights from pittsburgh to philadelphia next tuesday arriving near 6 o'clock
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 , date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PHILADELPHIA' AND(( flight_1.arrival_time >= 1730 AND flight_1.arrival_time <= 1830 ) AND(( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 3 AND date_day_1.day_number = 22 AND NOT(( flight_1.arrival_time < flight_1.departure_time AND 1 = 1 ) ) ) OR( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 3 AND date_day_1.day_number = 22 AND( flight_1.arrival_time < flight_1.departure_time AND 1 = 1 ) ) ) ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1, date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'PITTSBURGH' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'PHILADELPHIA' AND( flight_1.arrival_time >= 1830 AND flight_1.arrival_time = 1830 ) AND flight_1.arrival_time = 1830 ) )
+
+Error Message:
+OperationalError: near ")": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 53 (Index 427):
+NL Query: list all flights from boston to atlanta before 5 o'clock am on thursday
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , days days_1 , date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ATLANTA' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 5 AND date_day_1.day_number = 24 AND flight_1.departure_time < 500 ) )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2, days days_1, date_day date_day_1 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'ATLANTA' AND( flight_1.flight_days = days_1.days_code AND days_1.day_name = date_day_1.day_name AND date_day_1.year = 1991 AND date_day_1.month_number = 5 AND date_day_1.day_number = 24 AND flight_1.departure_time  1700 ) )
+
+Error Message:
+OperationalError: near "1700": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 54 (Index 457):
+NL Query: i would like the evening schedule of flights from san francisco to washington
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.departure_time BETWEEN 1800 AND 2200 AND( flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'SAN FRANCISCO' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'WASHINGTON' )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.departure_time, flight_1.arrival_time FROM flight flight_1, flight_leg flight_leg_1, flight flight_2, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.departure_time BETWEEN 1800 AND 2200 AND( flight_2.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'SAN FRANCISCO' AND flight_2.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'WASHINGTON' )
+
+Error Message:
+Query timed out
+
+--------------------------------------------------------------------------------
+
+Example 55 (Index 464):
+NL Query: which airlines fly from boston to washington dc via other cities
+
+Gold SQL:
+SELECT DISTINCT airline_1.airline_code FROM airline airline_1 , flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 , flight_stop flight_stop_1 , airport_service airport_service_3 , city city_3 WHERE airline_1.airline_code = flight_1.airline_code AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'WASHINGTON' AND city_2.state_code = 'DC' AND flight_1.flight_id = flight_stop_1.flight_id AND flight_stop_1.stop_airport = airport_service_3.airport_code AND airport_service_3.city_code = city_3.city_code AND 1 = 1 )
+
+Predicted SQL:
+SELECT DISTINCT airline_1.airline_code FROM airline airline_1, flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE airline_1.airline_code = flight_1.airline_code AND flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'BOSTON' AND flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'WASHINGTON' )
+
+Error Message:
+OperationalError: near ")": syntax error
+
+--------------------------------------------------------------------------------
+
+Example 56 (Index 465):
+NL Query: please give me all flights from dallas to oakland before noon
+
+Gold SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1 , airport_service airport_service_1 , city city_1 , airport_service airport_service_2 , city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'OAKLAND' AND flight_1.departure_time < 1200 )
+
+Predicted SQL:
+SELECT DISTINCT flight_1.flight_id FROM flight flight_1, airport_service airport_service_1, city city_1, airport_service airport_service_2, city city_2 WHERE flight_1.from_airport = airport_service_1.airport_code AND airport_service_1.city_code = city_1.city_code AND city_1.city_name = 'DALLAS' AND( flight_1.to_airport = airport_service_2.airport_code AND airport_service_2.city_code = city_2.city_code AND city_2.city_name = 'OAKLAND' AND flight_1.departure_time  1200 )
+
+Error Message:
+OperationalError: near "1200": syntax error
+
+--------------------------------------------------------------------------------
+
